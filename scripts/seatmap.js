@@ -10,7 +10,7 @@ angular.module("seatmap", ["seatmap.gestures"])
             var container = new PIXI.Container();
             container.interactive = true;
 
-            this.label = seat.label.toUpperCase().replace(/(\/s)/g,"");
+            this.label = seat.label.toUpperCase().replace(/(\s)/g,"");
             this.line = seat.line;
             this.column = seat.column;
             this.id = seat.id;
