@@ -44,11 +44,12 @@ angular.module("seatmap", ["seatmap.gestures"])
                 switch (_seat.status) {
                     case "Available":
                         sprite.texture = config.seat_selected;
+                        text.alpha = 1;
                         _seat.status = "Selected";
                         break;
                     case "Selected":
                         sprite.texture = config.seat_available;
-                        text.alpha = 1;
+                        text.alpha = 0;
                         _seat.status = "Available";
                         break;
                     case "Occupied":
