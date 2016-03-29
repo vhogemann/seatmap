@@ -197,7 +197,7 @@ angular.module("seatmap", ["seatmap.gestures"])
 
                 var width = response.data.bounds.columns * 50;
                 var height = response.data.bounds.lines * 50;
-                var renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0x1099bb });
+                var renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, true);
 
                 $element.append(renderer.view);
 
@@ -217,6 +217,10 @@ angular.module("seatmap", ["seatmap.gestures"])
                 // create the root of the scene graph
                 var stage = new PIXI.Container();
                 stage.hitArea = new PIXI.Rectangle(0,0,width,height);
+                
+                var back_texture = PIXI.Texture.fromImage('assets/background.png');
+                var background = new PIXI.TilingSprite(back_texture, width, height);
+                stage.addChild(background);
                 stage.addChild(seatmap.config.container);
                 
                 gestures.pinchable(stage);
@@ -246,7 +250,7 @@ angular.module("seatmap", ["seatmap.gestures"])
             restrict: 'E',
             controller: controller,
             controllerAs: 'ctrl',
-            template: '<div></div>',
+            template: '',
             bindToController: {
                 session: '=',
                 section: '='
