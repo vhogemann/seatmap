@@ -126,10 +126,10 @@ angular.module("seatmap", [])
 
                 $element.append(renderer.view);
 
-                $element.bind('mousewheel', function(e) {
+                $element.bind('wheel', function(e) {
                     e.preventDefault();
                     var scale = seatmap.scale;
-                    if (e.originalEvent.wheelDelta / 120 > 0) {
+                    if (e.deltaY / 120 < 0) {
                         seatmap.setScale( scale + 0.1, null );
                     }
                     else {
@@ -182,8 +182,6 @@ angular.module("seatmap", [])
         }
     })
     .service('TouchEvents', function() {
-
-
         var pinchable = function(sprite) {
             var start = function(e) {
                 e.target.on('touchmove', move)

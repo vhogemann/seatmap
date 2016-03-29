@@ -1,0 +1,7 @@
+{
+  "name": "seatmap",
+  "dependencies": {
+    "angular": "^1.5.3",
+    "pixi.js": "^3.0.10"
+  }
+}
