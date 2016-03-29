@@ -1,16 +1,31 @@
-angular.module("seatmap", [])
-    .directive('seatMap', function() {
+"use strict";
+
+angular.module("seatmap", ["seatmap.gestures"])
+    .directive("seatMap", function() {
 
         /** Wrapper Class para um assento */
         var Seat = function(seat, config) {
             var _seat = this;
+            
+            var container = new PIXI.Container();
+            container.interactive = true;
 
-            this.label = seat.label;
+            this.label = seat.label.toUpperCase().replace(/(\/s)/g,"");
             this.line = seat.line;
             this.column = seat.column;
             this.id = seat.id;
             this.status = seat.status;
 
+            var text = new PIXI.Text(this.label, { 
+                font: 'bold 50px "Trebuchet MS", Helvetica, sans-serif', 
+                fill: 'white', 
+                stroke: 'black', strokeThickness: 2,
+                dropShadow: true
+             });
+            text.scale = { x : 1/2, y : 1/2 };
+            text.position.x = ( 50 - text.width  ) / 2;
+            text.position.y = ( 50 - text.height ) / 2;
+            text.alpha = 0;
 
             var status = function() {
                 switch (_seat.status) {
@@ -24,7 +39,6 @@ angular.module("seatmap", [])
             };
 
             var sprite = status();
-            sprite.interactive = true;
 
             var click = function() {
                 switch (_seat.status) {
@@ -34,6 +48,7 @@ angular.module("seatmap", [])
                         break;
                     case "Selected":
                         sprite.texture = config.seat_available;
+                        text.alpha = 1;
                         _seat.status = "Available";
                         break;
                     case "Occupied":
@@ -41,22 +56,32 @@ angular.module("seatmap", [])
                 }
             };
 
-            sprite.on('click', click);
-            sprite.on('tap', click);
-            sprite.on('mouseover', function() {
-                if (_seat.status === "Available")
-                    sprite.texture = config.seat_highlight;
-            });
-            sprite.on('mouseout', function() {
-                if (_seat.status === "Available")
-                    sprite.texture = config.seat_available;
-            });
+            container
+                .on('click', click)
+                .on('tap', click)
+                .on('mouseover', function() {
+                    text.alpha = 1;
+                    if (_seat.status === "Available")
+                        sprite.texture = config.seat_highlight;
+                })
+                .on('mouseout', function() {
+                    if(_seat.status != "Selected")
+                        text.alpha = 0;
+    
+                    if (_seat.status === "Available")
+                        sprite.texture = config.seat_available;
+                });
 
             sprite.height = 50;
             sprite.width = 50;
-            sprite.position.x = seat.column * 50;
-            sprite.position.y = seat.line * 50;
-            config.container.addChild(sprite);
+            
+            container.position.x = seat.column * 50;
+            container.position.y = seat.line * 50;
+            
+            container.addChild(sprite);
+            container.addChild(text);
+            
+            config.container.addChild(container);
         };
 
         /** Wrapper Class para uma linha */
@@ -68,50 +93,99 @@ angular.module("seatmap", [])
 
         /** Wrapper Class para o mapa de assentos */
         var SeatMap = function(data, config) {
-
+            
+            var width = data.bounds.columns * 50;
+            var height = data.bounds.lines * 50;
+            
             var map = this;
             map.scale = 1;
-
             map.config = config;
 
             map.lines = data.lines.map(function(line) {
-                var l = Line(line, config);
+                return new Line(line, config);
             });
+            /** limita o movimento a area do mapa */
+            map.checkBounds = function(){
+                var container = map.config.container;
 
-            map.center = function(center, scale) {
+                var posX = container.position.x;
+                var posY = container.position.y;
+                
+                var contW = width * map.scale;
+                var contH = height * map.scale;
+                
+                if( posX > 0 ) posX = 0;
+                if(posY > 0 ) posY = 0;
+               
+                if( contW + posX < width ) posX = width - contW;
+                if( contH + posY < height ) posY = height - contH;  
+                
+                console.log( {
+                    w : contW,
+                    h : contH
+                });
+                
+                console.log( {
+                    pw : width,
+                    ph : height
+                });
+                
+                console.log({ x: posX, y: posY });
+                container.position.x = posX;
+                container.position.y = posY;
+                
+            };
 
+            map.move = function(deltaX, deltaY){
+              var container = map.config.container;
+              
+              container.position.x += deltaX;
+              container.position.y += deltaY;
+              
+              map.checkBounds();  
             };
 
             map.setScale = function(s, c) {
+                var container = map.config.container;
+                var scale = map.scale;
+                var posX = container.position.x;
+                var posY = container.position.y;
 
-                map.scale = s;
+                posX -= (c.x/scale*s) - (c.x/scale);
+                posY -= (c.y/scale*s) - (c.y/scale);
 
-                if (map.scale < 1) map.scale = 1;
-                if (map.scale > 2) map.scale = 2;
-
-                //scale by .5 with anchor (a,b), then (x,y) will be sent to ((a+x)/2,((b+y)/2)
-                var x = map.config.container.position.x;
-                var y = map.config.container.position.y;
-
-                /*
-                x = (c.x + x) * scale;
-                y = (c.y + y) * scale;
+                scale = scale * s;
                 
-                map.config.container.position.x = x;
-                map.config.container.position.y = y;
-                */
+                if( scale > map.config.max_scale ) {
+                    scale = map.config.max_scale;
+                    posX = container.position.x;
+                    posY = container.position.y;
+                }
 
-                map.config.container.scale.x = s;
-                map.config.container.scale.y = s;
+                if ( scale < 1 ) {
+                    scale = 1;
+                    posX = container.position.x;
+                    posY = container.position.y;
+                }
+                map.scale = scale;
+
+                container.scale.x = scale;
+                container.scale.y = scale;
+                
+                container.position.x = posX;
+                container.position.y = posY;
+                
+                map.checkBounds();
             };
         };
 
-        var controller = function($element, seats, TouchEvents) {
+        var controller = function($element, seats, gestures) {
             var cntrl = this;
 
             seats.get(this.session, this.section).then(function(response) {
                 var seatmap = new SeatMap(response.data,
                     { //FUTURE: Configuration object
+                        max_scale : 3,
                         seat_available: PIXI.Texture.fromImage('assets/seat_available.png'),
                         seat_highlight: PIXI.Texture.fromImage('assets/seat_highlight.png'),
                         seat_selected: PIXI.Texture.fromImage('assets/seat.png'), //seat_selected.png
@@ -127,40 +201,44 @@ angular.module("seatmap", [])
                 $element.append(renderer.view);
 
                 $element.bind('wheel', function(e) {
+                    var pos = { x : e.layerX, y: e.layerY };
+
                     e.preventDefault();
-                    var scale = seatmap.scale;
+                    
                     if (e.deltaY / 120 < 0) {
-                        seatmap.setScale( scale + 0.1, null );
+                        seatmap.setScale( 1.1, pos );
                     }
                     else {
-                        seatmap.setScale( scale - 0.1, null );
+                        seatmap.setScale( 0.9, pos );
                     }
                 });
 
                 // create the root of the scene graph
                 var stage = new PIXI.Container();
+                stage.hitArea = new PIXI.Rectangle(0,0,width,height);
                 stage.addChild(seatmap.config.container);
-
-                TouchEvents.pinchable(stage);
-                stage.on('pinchmove', function(e) {
-                    var scale = seatmap.scale;
-                    scale = scale * e.scale;
-                    seatmap.setScale(scale, e.center);
-                });
-
+                
+                gestures.pinchable(stage);
+                gestures.panable(stage);
+                
+                stage
+                    .on('pinchmove', function(e) {
+                        seatmap.setScale(e.scale, e.center);
+                    })
+                    .on('panmove', function(e) {
+                        seatmap.move(e.deltaX, e.deltaY);
+                    });
 
                 var scale = 1;
-                var direction = -0.01;
 
+                // Main Loop
                 var animate = function() {
                     requestAnimationFrame(animate);
                     renderer.render(stage);
                 }
-
                 animate();
 
             });
-
         };
 
         return {
@@ -179,72 +257,5 @@ angular.module("seatmap", [])
             get: function(session, sector) {
                 return $http.get('https://api.ingresso.com/v1/sessions/' + session + '/sections/' + sector + '/seats');
             }
-        }
-    })
-    .service('TouchEvents', function() {
-        var pinchable = function(sprite) {
-            var start = function(e) {
-                e.target.on('touchmove', move)
-            }
-            var move = function(e) {
-                var t = e.data.originalEvent.targetTouches
-                if (!t || t.length < 2) {
-                    return
-                }
-                var dx = t[0].clientX - t[1].clientX
-                var dy = t[0].clientY - t[1].clientY
-                var distance = Math.sqrt(dx * dx + dy * dy)
-                if (!e.target._pinch) {
-                    e.target._pinch = {
-                        p: { distance: distance, date: new Date() },
-                        pp: {}
-                    }
-                    e.target.emit('pinchstart')
-                    return
-                }
-                var center = {
-                    x: (t[0].clientX + t[1].clientX) / 2,
-                    y: (t[0].clientY + t[1].clientY) / 2
-                }
-                var now = new Date()
-                var interval = now - e.target._pinch.p.date
-                if (interval < 12) {
-                    return
-                }
-                var event = {
-                    scale: distance / e.target._pinch.p.distance,
-                    velocity: distance / interval,
-                    center: center,
-                    data: e.data
-                }
-                e.target.emit('pinchmove', event)
-                e.target._pinch.pp = {
-                    distance: e.target._pinch.p.distance,
-                    date: e.target._pinch.p.date
-                }
-                e.target._pinch.p = {
-                    distance: distance,
-                    date: now
-                }
-            }
-
-            // TODO: Inertia Mode
-            var end = function(e) {
-                if (e.target._pinch) {
-                    e.target.emit('pinchend')
-                }
-                e.target._pinch = null
-                e.target.removeListener('touchmove', move)
-            }
-
-            sprite.interactive = true
-            sprite
-                .on('touchstart', start)
-                .on('touchend', end)
-                .on('touchendoutside', end)
-        };
-
-        return {
-            pinchable: pinchable
         }
     });
