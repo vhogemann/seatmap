@@ -1,7 +1,9 @@
+"use strict";
+
 angular.module('seatmap.model', [])
     .factory('SeatMap', function() {
         /** Wrapper Class para um assento */
-        var Seat = function(seat, config) {
+        var Seat = function(seat, resources) {
             var _seat = this;
 
             var container = new PIXI.Container();
@@ -12,41 +14,59 @@ angular.module('seatmap.model', [])
             this.column = seat.column;
             this.id = seat.id;
             this.status = seat.status;
+            this.type = seat.type;
 
-            var text = new PIXI.Text(this.label, {
-                font: 'bold 50px "Trebuchet MS", Helvetica, sans-serif',
-                fill: 'white',
-                stroke: 'black', strokeThickness: 2,
-                dropShadow: true
-            });
-            text.scale = { x: 1 / 2, y: 1 / 2 };
+            var text = new PIXI.Text(this.label, resources.label.style);
+            
+            text.scale = { x: .4, y: .4 };
             text.position.x = (50 - text.width) / 2;
             text.position.y = (50 - text.height) / 2;
             text.alpha = 0;
-
-            var status = function() {
-                switch (_seat.status) {
-                    case "Available":
-                        return new PIXI.Sprite(config.seat_available);
-                    case "Selected":
-                        return new PIXI.Sprite(config.seat_selected);
-                    case "Occupied":
-                        return new PIXI.Sprite(config.seat_occupied);
-                }
-            };
-
-            var sprite = status();
-
+            
+            var icon = false;
+            if( !!resources.icons[_seat.type] ){
+                icon = new PIXI.Sprite(resources.icons[_seat.type]);
+                icon.width = 25;
+                icon.height = 25;
+                icon.position = { 
+                    x : (50 - icon.width) / 2,
+                    y : (50 - icon.height) / 2 
+                };
+            }
+            
+            var base = new PIXI.Sprite(resources.icons.Circle);
+            base.width = 50; base.height = 50;
+            base.anchor = { x: 0.5, y: 0.5 };
+            base.position = { x: 25, y: 25 };
+            var bs = base.scale.x;
+            
+            switch(_seat.type) {
+                case "Disability" :
+                case "ReducedMobility" :
+                    base.texture = resources.icons.Losangle;
+                    break;
+                case "Obese":
+                    base.texture = resources.icons.Square;
+                    break;
+            }
+            
+            switch(_seat.status) {
+                case "Available":
+                    base.tint = 0x00aa00;
+                    break;
+                case "Occupied":
+                    base.tint = 0xebebeb;
+            }
+            
             var click = function() {
                 switch (_seat.status) {
                     case "Available":
-                        sprite.texture = config.seat_selected;
-                        text.alpha = 1;
+                        base.tint = 0xff1100;
+                        if(icon) icon.alpha = 0;
                         _seat.status = "Selected";
                         break;
                     case "Selected":
-                        sprite.texture = config.seat_available;
-                        text.alpha = 0;
+                        base.tint = 0x00aa00;
                         _seat.status = "Available";
                         break;
                     case "Occupied":
@@ -58,28 +78,29 @@ angular.module('seatmap.model', [])
                 .on('click', click)
                 .on('tap', click)
                 .on('mouseover', function() {
-                    text.alpha = 1;
-                    if (_seat.status === "Available")
-                        sprite.texture = config.seat_highlight;
+                    if (_seat.status === "Available"){
+                        base.scale = { x : bs * 1.3, y : bs * 1.3 };
+                        text.alpha = 1;
+                        if(!!icon) icon.alpha = 0;
+                    }
                 })
                 .on('mouseout', function() {
-                    if (_seat.status != "Selected")
+                    base.scale = { x : bs, y : bs };
+                    if (_seat.status != "Selected"){
                         text.alpha = 0;
-
-                    if (_seat.status === "Available")
-                        sprite.texture = config.seat_available;
+                        if(!!icon) icon.alpha = 1;
+                    }
                 });
-
-            sprite.height = 50;
-            sprite.width = 50;
 
             container.position.x = seat.column * 50;
             container.position.y = seat.line * 50;
 
-            container.addChild(sprite);
+            container.addChild(base);
             container.addChild(text);
+            if(!!icon)
+                container.addChild(icon);
 
-            config.container.addChild(container);
+            resources.container.addChild(container);
         };
 
         /** Wrapper Class para uma linha */

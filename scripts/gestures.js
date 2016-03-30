@@ -1,3 +1,4 @@
+"use strict";
 
 angular.module("seatmap.gestures",[])
     .service("gestures", function() {
