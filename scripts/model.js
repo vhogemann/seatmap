@@ -63,10 +63,13 @@ angular.module('seatmap.model', [])
                     case "Available":
                         base.tint = 0xff1100;
                         if(icon) icon.alpha = 0;
+                        text.alpha = 1;
                         _seat.status = "Selected";
                         break;
                     case "Selected":
                         base.tint = 0x00aa00;
+                        if(icon) icon.alpha = 1;
+                        text.alpha = 0;
                         _seat.status = "Available";
                         break;
                     case "Occupied":
