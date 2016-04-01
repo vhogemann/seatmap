@@ -194,17 +194,18 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
-            <key type="filename">ac.png</key>
+            <key type="filename">Circle.png</key>
+            <key type="filename">Companion.png</key>
+            <key type="filename">Couple.png</key>
+            <key type="filename">CoupleLeft.png</key>
+            <key type="filename">CoupleRight.png</key>
+            <key type="filename">Disability.png</key>
+            <key type="filename">Losangle.png</key>
+            <key type="filename">MotionSimulator.png</key>
+            <key type="filename">Obese.png</key>
+            <key type="filename">ReducedMobility.png</key>
+            <key type="filename">SuperD.png</key>
             <key type="filename">al.png</key>
-            <key type="filename">cadeirante.png</key>
-            <key type="filename">circle.png</key>
-            <key type="filename">couple.png</key>
-            <key type="filename">dbox.png</key>
-            <key type="filename">losangle.png</key>
-            <key type="filename">mr.png</key>
-            <key type="filename">obeso.png</key>
-            <key type="filename">reclinavel.png</key>
-            <key type="filename">round.png</key>
             <key type="filename">square.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
@@ -213,18 +214,19 @@
         </map>
         <key>fileList</key>
         <array>
-            <filename>mr.png</filename>
-            <filename>obeso.png</filename>
-            <filename>reclinavel.png</filename>
-            <filename>round.png</filename>
-            <filename>square.png</filename>
-            <filename>ac.png</filename>
+            <filename>SuperD.png</filename>
             <filename>al.png</filename>
-            <filename>cadeirante.png</filename>
-            <filename>circle.png</filename>
-            <filename>couple.png</filename>
-            <filename>dbox.png</filename>
-            <filename>losangle.png</filename>
+            <filename>Circle.png</filename>
+            <filename>Companion.png</filename>
+            <filename>Couple.png</filename>
+            <filename>CoupleLeft.png</filename>
+            <filename>CoupleRight.png</filename>
+            <filename>Disability.png</filename>
+            <filename>Losangle.png</filename>
+            <filename>MotionSimulator.png</filename>
+            <filename>Obese.png</filename>
+            <filename>ReducedMobility.png</filename>
+            <filename>square.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
