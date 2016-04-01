@@ -7,6 +7,7 @@ angular.module('seatmap.model', [])
             var _seat = this;
 
             var container = new PIXI.Container();
+            _seat.container = container;
             container.interactive = true;
 
             this.label = seat.label.toUpperCase().replace(/(\s)/g, "");
@@ -86,6 +87,8 @@ angular.module('seatmap.model', [])
                     case "Occupied":
                         break;
                 }
+                if (!!resources.onClickSeat)
+                    resources.onClickSeat(_seat);
             };
 
             container

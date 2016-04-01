@@ -10,9 +10,29 @@ angular.module("seatmap", ["seatmap.model"])
 
             var render = function(response) {
 
+                var resetZoom = function() {
+                    canvas.transition()
+                        .duration(750)
+                        .call(zoom.translate([0, 0]).scale(1).event);
+                }
+                
+                var onClickSeat = function(seat) {
+                    if (seat.status == "Selected") {
+                        var x = seat.container.x + (50 / 2);
+                        var y = seat.container.y + (50 / 2);
+                        var scale = 4;
+                        console.log(width, height);
+                        var translate = [width / 2 - scale * x, height / 2 - scale * y];
+                        canvas.transition()
+                            .duration(750)
+                            .call(zoom.translate(translate).scale(scale).event);
+                    } else {
+                        resetZoom();
+                    }
+                }
+                
                 var seatmap = SeatMap.new(response.data,
                     { //FUTURE: Configuration object
-                        max_scale: 10,
                         icons: {
                             "Obese": PIXI.Texture.fromFrame("Obese.png"),
                             "Companion": PIXI.Texture.fromFrame("Companion.png"),
@@ -34,7 +54,8 @@ angular.module("seatmap", ["seatmap.model"])
                                 fill: 'white'
                             }
                         },
-                        container: new PIXI.Container()
+                        container: new PIXI.Container(),
+                        onClickSeat: onClickSeat
                     });
 
                 var width = response.data.bounds.columns * 50;
@@ -43,20 +64,20 @@ angular.module("seatmap", ["seatmap.model"])
 
                 $element.append(renderer.view);
                 
-                var zoom = function() {
+                var zoomed = function() {
                     var e = d3.event;
                     var tx = Math.min(0, Math.max(e.translate[0], width - width * e.scale));
                     var ty = Math.min(0, Math.max(e.translate[1], height - height * e.scale));
-                    zoomBehavior.translate([tx, ty]);
+                    zoom.translate([tx, ty]);
                     seatmap.setZoom(e.scale, [tx, ty]);
                 };
 
-                var zoomBehavior = d3.behavior.zoom()
+                var zoom = d3.behavior.zoom()
                     .scaleExtent([1, 8])
                     .size([width, height])
-                    .on("zoom", zoom);
+                    .on("zoom", zoomed);
                     
-                var canvas = d3.select(renderer.view).call(zoomBehavior).on("dblclick.zoom", null);
+                var canvas = d3.select(renderer.view).call(zoom).on("dblclick.zoom", null);
 
                 // create the root of the scene graph
                 var stage = new PIXI.Container();
@@ -64,6 +85,7 @@ angular.module("seatmap", ["seatmap.model"])
 
                 var back_texture = PIXI.Texture.fromImage('assets/background.png');
                 var background = new PIXI.extras.TilingSprite(back_texture, width, height);
+                background.on('click', resetZoom);
                 stage.addChild(background);
                 stage.addChild(seatmap.config.container);
 
