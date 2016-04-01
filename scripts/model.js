@@ -127,69 +127,16 @@ angular.module('seatmap.model', [])
             map.lines = data.lines.map(function(line) {
                 return new Line(line, config);
             });
-            /** limita o movimento a area do mapa */
-            map.checkBounds = function() {
+
+            map.setZoom = function(scale, translate) {
                 var container = map.config.container;
-
-                var posX = container.position.x;
-                var posY = container.position.y;
-
-                var contW = width * map.scale;
-                var contH = height * map.scale;
-
-                if (posX > 0) posX = 0;
-                if (posY > 0) posY = 0;
-
-                if (contW + posX < width) posX = width - contW;
-                if (contH + posY < height) posY = height - contH;
-
-                container.position.x = posX;
-                container.position.y = posY;
-            };
-
-            map.move = function(deltaX, deltaY) {
-                var container = map.config.container;
-
-                container.position.x += deltaX;
-                container.position.y += deltaY;
-
-                map.checkBounds();
-            };
-
-            map.setScale = function(s, c) {
-                var container = map.config.container;
-                
-                var scale = map.scale;
-
-                scale = scale * s;
-
-                var pos = {
-                    x : c.x - ( c.x * scale ),
-                    y : c.y - ( c.y * scale )
-                };
-
-                if (scale > map.config.max_scale) {
-                    scale = map.config.max_scale;
-                    pos.x = container.position.x;
-                    pos.y = container.position.y;
-                }
-
-                if (scale < 1) {
-                    scale = 1;
-                    pos.x = container.position.x;
-                    pos.y = container.position.y;
-                }
-                
                 map.scale = scale;
-                
-                container.position.x = pos.x;
-                container.position.y = pos.y;
-
                 container.scale.x = scale;
                 container.scale.y = scale;
-                
-                map.checkBounds();
+                container.position.x = translate[0];
+                container.position.y = translate[1];
             };
+            
         };
         
         return {

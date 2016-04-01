@@ -1,9 +1,9 @@
 "use strict";
 
-angular.module("seatmap", ["seatmap.model", "seatmap.gestures"])
+angular.module("seatmap", ["seatmap.model"])
     .directive("seatMap", function() {
 
-        var controller = function($element, seats, gestures, SeatMap) {
+        var controller = function($element, seats, SeatMap) {
             var cntrl = this;
 
             var loader = PIXI.loader.add(["assets/texture.json"]);
@@ -42,19 +42,21 @@ angular.module("seatmap", ["seatmap.model", "seatmap.gestures"])
                 var renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, true);
 
                 $element.append(renderer.view);
+                
+                var zoom = function() {
+                    var e = d3.event;
+                    var tx = Math.min(0, Math.max(e.translate[0], width - width * e.scale));
+                    var ty = Math.min(0, Math.max(e.translate[1], height - height * e.scale));
+                    zoomBehavior.translate([tx, ty]);
+                    seatmap.setZoom(e.scale, [tx, ty]);
+                };
 
-                $element.bind('wheel', function(e) {
-                    var pos = { x: e.layerX, y: e.layerY };
-
-                    e.preventDefault();
-
-                    if (e.deltaY / 120 < 0) {
-                        seatmap.setScale(1.1, pos);
-                    }
-                    else {
-                        seatmap.setScale(0.9, pos);
-                    }
-                });
+                var zoomBehavior = d3.behavior.zoom()
+                    .scaleExtent([1, 8])
+                    .size([width, height])
+                    .on("zoom", zoom);
+                    
+                var canvas = d3.select(renderer.view).call(zoomBehavior).on("dblclick.zoom", null);
 
                 // create the root of the scene graph
                 var stage = new PIXI.Container();
@@ -64,17 +66,6 @@ angular.module("seatmap", ["seatmap.model", "seatmap.gestures"])
                 var background = new PIXI.extras.TilingSprite(back_texture, width, height);
                 stage.addChild(background);
                 stage.addChild(seatmap.config.container);
-
-                gestures.pinchable(stage);
-                gestures.panable(stage);
-
-                stage
-                    .on('pinchmove', function(e) {
-                        seatmap.setScale(e.scale, e.center);
-                    })
-                    .on('panmove', function(e) {
-                        seatmap.move(e.deltaX, e.deltaY);
-                    });
 
                 var scale = 1;
 
