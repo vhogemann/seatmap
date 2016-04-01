@@ -14,18 +14,19 @@ angular.module("seatmap", ["seatmap.model"])
                     { //FUTURE: Configuration object
                         max_scale: 10,
                         icons: {
-                            "Obese": PIXI.Texture.fromFrame("Obese"),
-                            "Companion": PIXI.Texture.fromFrame("Companion"),
-                            "SuperD": PIXI.Texture.fromFrame("SuperD"),
-                            "Disability": PIXI.Texture.fromFrame("Disability"),
-                            "MotionSimulator": PIXI.Texture.fromFrame("MotionSimulator"),
-                            "ReducedMobility": PIXI.Texture.fromFrame("ReducedMobility"),
-                            "Couple": PIXI.Texture.fromFrame("Couple"),
-                            "SuperSeat": PIXI.Texture.fromFrame("SuperSeat"),
-                            "Circle": PIXI.Texture.fromFrame("Circle"),
-                            "Square": PIXI.Texture.fromFrame("Square"),
-                            "Losangle": PIXI.Texture.fromFrame("Losangle"),
-                            "Round": PIXI.Texture.fromFrame("Round")
+                            "Obese": PIXI.Texture.fromFrame("Obese.png"),
+                            "Companion": PIXI.Texture.fromFrame("Companion.png"),
+                            "SuperD": PIXI.Texture.fromFrame("SuperD.png"),
+                            "Disability": PIXI.Texture.fromFrame("Disability.png"),
+                            "MotionSimulator": PIXI.Texture.fromFrame("MotionSimulator.png"),
+                            "ReducedMobility": PIXI.Texture.fromFrame("ReducedMobility.png"),
+                            "Couple": PIXI.Texture.fromFrame("Couple.png"),
+                            //"SuperSeat": PIXI.Texture.fromFrame("SuperSeat.png"),
+                            "Circle": PIXI.Texture.fromFrame("Circle.png"),
+                            "Square": PIXI.Texture.fromFrame("Square.png"),
+                            "Losangle": PIXI.Texture.fromFrame("Losangle.png"),
+                            "CoupleLeft": PIXI.Texture.fromFrame("CoupleLeft.png"),
+                            "CoupleRight": PIXI.Texture.fromFrame("CoupleRight.png")
                         },
                         label: {
                             style: {
@@ -35,7 +36,6 @@ angular.module("seatmap", ["seatmap.model"])
                         },
                         container: new PIXI.Container()
                     });
-
 
                 var width = response.data.bounds.columns * 50;
                 var height = response.data.bounds.lines * 50;

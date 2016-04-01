@@ -43,10 +43,20 @@ angular.module('seatmap.model', [])
             switch(_seat.type) {
                 case "Disability" :
                 case "ReducedMobility" :
+                case "Obese":
+                case "Companion":
+                    base.texture = resources.icons.Square;
+                    break;
+                case "MotionSimulator":
+                case "SuperD":
+                case "SuperSeat":
                     base.texture = resources.icons.Losangle;
                     break;
-                case "Obese":
-                    base.texture = resources.icons.Square;
+                case "CoupleLeft":
+                    base.texture = resources.icons.CoupleLeft;
+                    break;
+                case "CoupleRight":
+                    base.texture = resources.icons.CoupleRight;
                     break;
             }
             
