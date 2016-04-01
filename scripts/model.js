@@ -52,22 +52,23 @@ angular.module('seatmap.model', [])
             
             switch(_seat.status) {
                 case "Available":
-                    base.tint = 0x00aa00;
+                    base.tint = 0x0cb0b1;
                     break;
                 case "Occupied":
-                    base.tint = 0xebebeb;
+                    base.tint = 0xdbdbdb;
             }
             
             var click = function() {
                 switch (_seat.status) {
                     case "Available":
-                        base.tint = 0xff1100;
+                        base.tint = 0xd3793d;
                         if(icon) icon.alpha = 0;
+                        base.scale = { x : bs * 1.2, y : bs * 1.2 };
                         text.alpha = 1;
                         _seat.status = "Selected";
                         break;
                     case "Selected":
-                        base.tint = 0x00aa00;
+                        base.tint = 0x0cb0b1;
                         if(icon) icon.alpha = 1;
                         text.alpha = 0;
                         _seat.status = "Available";
@@ -82,14 +83,14 @@ angular.module('seatmap.model', [])
                 .on('tap', click)
                 .on('mouseover', function() {
                     if (_seat.status === "Available"){
-                        base.scale = { x : bs * 1.3, y : bs * 1.3 };
+                        base.scale = { x : bs * 1.2, y : bs * 1.2 };
                         text.alpha = 1;
                         if(!!icon) icon.alpha = 0;
                     }
                 })
                 .on('mouseout', function() {
-                    base.scale = { x : bs, y : bs };
                     if (_seat.status != "Selected"){
+                        base.scale = { x : bs, y : bs };
                         text.alpha = 0;
                         if(!!icon) icon.alpha = 1;
                     }
