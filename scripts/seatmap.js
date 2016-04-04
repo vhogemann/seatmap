@@ -16,21 +16,6 @@ angular.module("seatmap", ["seatmap.model"])
                         .call(zoom.translate([0, 0]).scale(1).event);
                 }
                 
-                var onClickSeat = function(seat) {
-                    if (seat.status == "Selected") {
-                        var x = seat.container.x + (50 / 2);
-                        var y = seat.container.y + (50 / 2);
-                        var scale = 4;
-                        console.log(width, height);
-                        var translate = [width / 2 - scale * x, height / 2 - scale * y];
-                        canvas.transition()
-                            .duration(750)
-                            .call(zoom.translate(translate).scale(scale).event);
-                    } else {
-                        resetZoom();
-                    }
-                }
-                
                 var seatmap = SeatMap.new(response.data,
                     { //FUTURE: Configuration object
                         icons: {
@@ -54,31 +39,66 @@ angular.module("seatmap", ["seatmap.model"])
                                 fill: 'white'
                             }
                         },
-                        container: new PIXI.Container(),
-                        onClickSeat: onClickSeat
+                        container: new PIXI.Container()
                     });
 
                 var width = response.data.bounds.columns * 50;
                 var height = response.data.bounds.lines * 50;
+                console.log('width', [width, height]);
                 var renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, true);
 
                 $element.append(renderer.view);
                 
                 var zoomed = function() {
                     var e = d3.event;
-                    var tx = Math.min(0, Math.max(e.translate[0], width - width * e.scale));
-                    var ty = Math.min(0, Math.max(e.translate[1], height - height * e.scale));
-                    zoom.translate([tx, ty]);
-                    seatmap.setZoom(e.scale, [tx, ty]);
+                    var zoom = e.target;
+                    seatmap.setZoom(e.scale, e.translate);
                 };
+                
+                var bounds = function() {
+                  var e = d3.event;
+                  var zoom = e.target;
+                  var translate = zoom.translate();
+                  var scale = zoom.scale();
+                  console.log('zoomend', scale, translate);
+                  if (
+                    (translate[0] < width - width * scale) || 
+                    (translate[1] < height - height * scale) ||
+                    (translate[0] > 0) ||
+                    (translate[1] > 0)
+                    ) {
+                    var tx = Math.min(0, Math.max(translate[0], width - width * scale));
+                    var ty = Math.min(0, Math.max(translate[1], height - height * scale));
+                    canvas.transition()
+                        .duration(250)
+                        .call(zoom.translate([tx, ty]).event);
+                  }
+                }
 
                 var zoom = d3.behavior.zoom()
-                    .scaleExtent([1, 8])
+                    .translate([0, 0])
+                    .scale(1)
                     .size([width, height])
-                    .on("zoom", zoomed);
+                    .scaleExtent([1, 8])
+                    .on("zoom", zoomed)
+                    .on("zoomend", bounds);
                     
-                var canvas = d3.select(renderer.view).call(zoom).on("dblclick.zoom", null);
+                var canvas = d3.select(renderer.view).call(zoom).call(zoom.event);
 
+                seatmap.config.onClickSeat = function(seat) {
+                    //if (seat.status == "Selected") {
+                        var x = seat.container.x + (50 / 2);
+                        var y = seat.container.y + (50 / 2);
+                        var scale = 4;
+                        var translate = [width / 2 - scale * x, height / 2 - scale * y];
+                        canvas.transition()
+                            .duration(750)
+                            .call(zoom.translate(translate).scale(scale).event);
+                    //} else {
+                        // resetZoom();
+                    //}
+                }
+                
                 // create the root of the scene graph
                 var stage = new PIXI.Container();
                 stage.hitArea = new PIXI.Rectangle(0, 0, width, height);

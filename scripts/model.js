@@ -81,6 +81,7 @@ angular.module('seatmap.model', [])
                     case "Selected":
                         base.tint = 0x0cb0b1;
                         if(icon) icon.alpha = 1;
+                        base.scale = { x : bs, y : bs };
                         text.alpha = 0;
                         _seat.status = "Available";
                         break;
@@ -90,26 +91,34 @@ angular.module('seatmap.model', [])
                 if (!!resources.onClickSeat)
                     resources.onClickSeat(_seat);
             };
+            
+            var mouseOver = function() {
+                if (_seat.status === "Available"){
+//                        base.scale = { x : bs * 1.2, y : bs * 1.2 };
+                    TweenLite.to(base.scale, 0.3, { x: bs * 1.3, y: bs * 1.3});
+                    text.alpha = 1;
+                    if(!!icon) icon.alpha = 0;
+                }
+                if (!!resources.onMouseOverSeat)
+                  resources.onMouseOverSeat(_seat);
+            };
+            
+            var mouseOut = function() {
+                if (_seat.status != "Selected"){
+//                        base.scale = { x : bs, y : bs };
+                    TweenLite.to(base.scale, 0.3, { x: bs, y: bs });
+                    text.alpha = 0;
+                    if(!!icon) icon.alpha = 1;
+                }
+                if (!!resources.onMouseOutSeat)
+                  resources.onMouseOutSeat(_seat);
+            };
 
             container
                 .on('click', click)
                 .on('tap', click)
-                .on('mouseover', function() {
-                    if (_seat.status === "Available"){
-//                        base.scale = { x : bs * 1.2, y : bs * 1.2 };
-                        TweenLite.to(base.scale, 0.3, { x: bs * 1.3, y: bs * 1.3});
-                        text.alpha = 1;
-                        if(!!icon) icon.alpha = 0;
-                    }
-                })
-                .on('mouseout', function() {
-                    if (_seat.status != "Selected"){
-//                        base.scale = { x : bs, y : bs };
-                        TweenLite.to(base.scale, 0.3, { x: bs, y: bs});
-                        text.alpha = 0;
-                        if(!!icon) icon.alpha = 1;
-                    }
-                });
+                .on('mouseover', mouseOver)
+                .on('mouseout', mouseOut);
 
             container.position.x = seat.column * 50;
             container.position.y = seat.line * 50;

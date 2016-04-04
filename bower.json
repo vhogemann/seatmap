@@ -2,8 +2,8 @@
   "name": "seatmap",
   "dependencies": {
     "angular": "^1.5.3",
-    "pixi.js": "^3.0.10",
-    "d3": "^3.5.9",
+    "pixi.js": "^3.0.11",
+    "d3": "^3.5.16",
     "tweenlite": "^1.11.5"
   }
 }
