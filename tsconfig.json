@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "outFile": "scripts/seat_map.js",
+        "rootDir": "src"
+    },
+    "exclude": [
+        "assets",
+        "bower_components",
+        "scripts",
+        "texture",
+        "typings/browser",
+        "typings/browser.d.ts"
+    ]
+}
