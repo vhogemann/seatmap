@@ -1,26 +1,50 @@
 /// <reference path="../typings/main.d.ts" />
+/// <reference path="./view.ts" />
 
 namespace SeatMap {
-    
+    /** configuration options */
     export interface IMapOptions {
         /** base element size for the sprites, in pixels */
         sprite_size : number;
         /** texture map file */
         texture_map : string;
         /** should we try to enable WebGL, if available */
-        enable_web_gl : boolean;
+        disable_web_gl : boolean;
         /** view implementation for drawing seats */
         seat_view_class : View.ASeatView;
         /** view implementation for drawing the map */
         map_view_class : View.IMapView;
+        /** configuration for the seat view */
+        seat_config: View.ISeatViewConfig;
     }
     
+    /** This class initializes and renders the SeatMap */
     export class Map {
         
-        private seats_map : {[key:string]:Model.Seat};
+        /** hashmap to hold the seats */
+        private _seats_map : {[key:string]:Model.Seat} = {};
+        
+        private _renderer : PIXI.CanvasRenderer | PIXI.WebGLRenderer;
+        
+        private _container : PIXI.Container;
         
         constructor( el: HTMLElement, data: any, options:IMapOptions ){
             
+            let columns : number = data.bounds.columns;
+            let rows : number = data.bounds.rows;
+            
+            let width = columns * options.sprite_size;
+            let height = columns * options.sprite_size;
+            
+            this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor : 0xFFF }, options.disable_web_gl);
+            
+            el.appendChild(this._renderer.view); 
+        }
+
+        /** main animation loop */
+        animate(){
+            requestAnimationFrame(this.animate);
+            this._renderer.render(this._container);
         }
     }
     
@@ -40,43 +64,6 @@ namespace SeatMap {
             column: number;
             line: number;
         }        
-    }
-    
-    export namespace View {
-        interface View {
-            container: PIXI.Container;
-        }
-        
-        export interface IViewConfig{
-            
-        }
-        
-        export abstract class ASeatView implements View {
-            /** internal state of the view */
-            seat : Model.Seat;
-            config : IViewConfig;
-            container : PIXI.Container;
-            
-            constructor(seat:Model.Seat, config: IViewConfig){
-                this.seat = seat;
-                this.config = config;
-            }
-            
-            abstract getBase() : PIXI.Sprite;
-            abstract getText() : PIXI.Sprite;
-            abstract getIcon() : PIXI.Sprite;
-            abstract addEventListener(listener:IEventListener<ASeatView>);
-        }
-        
-        export interface IEventListener<T extends View>  {
-            onMouseOver(view:T);
-            onMouseOut(view:T);
-            onClick(view:T);
-        }
-        
-        export interface IMapView extends View {
-            getBackground() : PIXI.Sprite;
-        }
     }
     
 }
