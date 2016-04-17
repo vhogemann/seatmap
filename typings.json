@@ -2,6 +2,7 @@
   "ambientDependencies": {
     "angular": "registry:dt/angular#1.5.0+20160412133217",
     "d3": "registry:dt/d3#0.0.0+20160317120654",
+    "gsap/tweenlite": "registry:dt/gsap/tweenlite#0.0.0+20160316155526",
     "pixi.js": "registry:dt/pixi.js#3.0.9+20160404013751"
   }
 }

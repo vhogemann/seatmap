@@ -13,7 +13,6 @@ namespace SeatMap {
         /** view implementation for drawing seats */
         seat_view_class : View.ASeatView;
         /** view implementation for drawing the map */
-        map_view_class : View.IMapView;
         /** configuration for the seat view */
         seat_config: View.ISeatViewConfig;
     }
@@ -21,8 +20,8 @@ namespace SeatMap {
     /** This class initializes and renders the SeatMap */
     export class Map {
         
-        /** hashmap to hold the seats */
         private _seats_map : {[key:string]:Model.Seat} = {};
+        private _seats_arr : Model.Seat[];
         
         private _renderer : PIXI.CanvasRenderer | PIXI.WebGLRenderer;
         
@@ -36,13 +35,36 @@ namespace SeatMap {
             let width = columns * options.sprite_size;
             let height = columns * options.sprite_size;
             
-            this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor : 0xFFF }, options.disable_web_gl);
+            data.seatmap.lines.forEach( l => {
+               l.seats.forEach( s => {
+                   var seat = new Model.Seat( s );
+                   this._seats_map[seat.id] = seat;
+                   this._seats_arr.push(seat);
+               });
+            });
             
+            this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor : 0xFFF }, options.disable_web_gl);
             el.appendChild(this._renderer.view); 
+        }
+        
+        /** updates the state of a given seat */
+        public setSeatState(seatId:string,state:Model.State){
+            this._seats_map[seatId].state = state;
+        }
+        
+        /** returns the seat with the given Id */
+        public getSeat(seatId:string){
+            return this._seats_map[seatId];
+        }
+        
+        /** returns every seat with the given state */
+        public getByState(state:Model.State):Model.Seat[]{
+            var result = this._seats_arr.filter( s => s.state === state );
+            return result;
         }
 
         /** main animation loop */
-        animate(){
+        public animate(){
             requestAnimationFrame(this.animate);
             this._renderer.render(this._container);
         }
@@ -63,6 +85,9 @@ namespace SeatMap {
             label: string;
             column: number;
             line: number;
+            constructor( seat: any){
+                
+            }
         }        
     }
     

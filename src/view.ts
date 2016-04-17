@@ -1,12 +1,20 @@
+/// <reference path="../typings/main.d.ts" />
 /// <reference path="./seatmap.ts" />
-
 namespace SeatMap{
     export namespace View {
         
         export interface ISeatViewConfig{
             interactive : boolean;
+            icons : {[key:string]:PIXI.Texture}
         }
         
+        /** available icons on the default texture */
+        export type IconName = 
+            "Obese"|"Companion"|"SuperD"|"Disability"|"MotionSimulator"
+            |"ReducedMobility"|"Couple"|"SuperSeat"|"Circle"|"Square"
+            |"Losangle"|"CoupleLeft"|"CoupleRight";
+        
+        /** base SeatView implementation, boilerplate goes here */
         export abstract class ASeatView {
             /** internal state of the view */
             seat : Model.Seat;
@@ -52,10 +60,14 @@ namespace SeatMap{
                 }
             }
             
-            abstract createBase() : PIXI.Sprite;
-            abstract createLabel() : PIXI.Sprite;
-            abstract createIcon() : PIXI.Sprite;
-
+            /** returns the bottom layer of the seat */
+            public abstract createBase() : PIXI.Sprite;
+            
+            /** returns the rendered label text */
+            public abstract createLabel() : PIXI.Sprite;
+            
+            /** icon indicating that this is an special seat */
+            public abstract createIcon() : PIXI.Sprite;
         }
         
         export interface ISeatListener<T extends ASeatView>  {
@@ -64,22 +76,50 @@ namespace SeatMap{
             onClick(view:T);
         }
         
-        export interface IMapView {
-            getBackground() : PIXI.Sprite;
+        export class MapView {
+            
+            container:PIXI.Container;
+            seats:ASeatView[];
+            
+            constructor(seats:Model.Seat[],sprite_size:number, options:ISeatViewConfig){
+                this.container = new PIXI.Container();
+                this.seats = seats.map(s => new DefaultSeatView(s,sprite_size,options));
+            }
         }
         
-        export class DefaultSeatView extends ASeatView{
+        /** Default SeatView implementation */
+        export class DefaultSeatView extends ASeatView implements ISeatListener<DefaultSeatView>{
+            constructor(seat:Model.Seat, sprite_size:number, config: ISeatViewConfig){
+                super(seat,sprite_size,config);
+                /* 
+                 Now this instance is listening to its container mouse events,
+                 and can change it's own appareance based on them.
+                 */
+                this.addListener(this);
+            }
             
-            createBase() : PIXI.Sprite {
+            public createBase() : PIXI.Sprite {
                 return null;    
             }
             
-            createLabel() : PIXI.Sprite{
+            public createLabel() : PIXI.Sprite{
                 return null;
             }
             
-            createIcon() : PIXI.Sprite {
+            public createIcon() : PIXI.Sprite {
                 return null;
+            }
+            
+            public onMouseOver(view:DefaultSeatView){
+                
+            }
+            
+            public onMouseOut(view:DefaultSeatView){
+                
+            }
+            
+            public onClick(view:DefaultSeatView){
+                
             }
         }
         
