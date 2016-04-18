@@ -10,9 +10,6 @@ namespace SeatMap {
         texture_map : string;
         /** should we try to enable WebGL, if available */
         disable_web_gl : boolean;
-        /** view implementation for drawing seats */
-        seat_view_class : View.ASeatView;
-        /** view implementation for drawing the map */
         /** configuration for the seat view */
         seat_config: View.ISeatViewConfig;
     }
@@ -22,9 +19,7 @@ namespace SeatMap {
         
         private _seats_map : {[key:string]:Model.Seat} = {};
         private _seats_arr : Model.Seat[];
-        
         private _renderer : PIXI.CanvasRenderer | PIXI.WebGLRenderer;
-        
         private _container : PIXI.Container;
         
         constructor( el: HTMLElement, data: any, options:IMapOptions ){
@@ -42,6 +37,8 @@ namespace SeatMap {
                    this._seats_arr.push(seat);
                });
             });
+            
+            
             
             this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor : 0xFFF }, options.disable_web_gl);
             el.appendChild(this._renderer.view); 

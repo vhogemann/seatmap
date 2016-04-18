@@ -76,6 +76,7 @@ namespace SeatMap{
             onClick(view:T);
         }
         
+        /**  */
         export class MapView {
             
             container:PIXI.Container;
@@ -83,7 +84,11 @@ namespace SeatMap{
             
             constructor(seats:Model.Seat[],sprite_size:number, options:ISeatViewConfig){
                 this.container = new PIXI.Container();
-                this.seats = seats.map(s => new DefaultSeatView(s,sprite_size,options));
+                this.seats = seats.map(s => {
+                    let view = new DefaultSeatView(s,sprite_size,options);
+                    this.container.addChild(view.container);
+                    return view;
+                });
             }
         }
         
