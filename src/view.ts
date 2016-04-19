@@ -76,20 +76,26 @@ namespace SeatMap{
             onClick(view:T);
         }
         
-        /**  */
+        /** renders the seatmap background and receives zoom and pan events */
         export class MapView {
             
             container:PIXI.Container;
-            seats:ASeatView[];
             
-            constructor(seats:Model.Seat[],sprite_size:number, options:ISeatViewConfig){
+            constructor(seats:View.ASeatView[]){
                 this.container = new PIXI.Container();
-                this.seats = seats.map(s => {
-                    let view = new DefaultSeatView(s,sprite_size,options);
-                    this.container.addChild(view.container);
-                    return view;
-                });
+                seats.forEach( s => this.container.addChild(s.container));
             }
+            
+            /** sets the map scale, and centers aroud the point given by x and y */
+            public setScale( scale:number, x: number, y:number ){
+                this.container.scale = new PIXI.Point(scale,scale);
+            }
+            
+            /** positions the map relative to its origin */
+            public moveTo(x: number, y: number){
+                this.container.position = new PIXI.Point(x,y);
+            }
+            
         }
         
         /** Default SeatView implementation */
@@ -104,7 +110,22 @@ namespace SeatMap{
             }
             
             public createBase() : PIXI.Sprite {
-                return null;    
+                switch(this.seat.seatType){
+                    case "Obese" :
+                    case "Companion" :
+                    case "ReducedMobility" :
+                        return new PIXI.Sprite(this.config.icons["Square"]);
+                    case "SuperD" :
+                    case "SuperSeat" :
+                    case "MotionSimulator" :
+                        return new PIXI.Sprite(this.config.icons["Losangle"]);
+                    case "CoupleLeft" :
+                        return new PIXI.Sprite(this.config.icons["CoupleLeft"]);
+                    case "CoupleRight" :
+                        return new PIXI.Sprite(this.config.icons["CoupleRight"]);
+                    default :
+                        return new PIXI.Sprite(this.config.icons["Circle"]);
+                }
             }
             
             public createLabel() : PIXI.Sprite{
