@@ -8,7 +8,7 @@ namespace SeatMap {
         sprite_size : number;
         /** texture map file */
         texture_map : string;
-        /** should we try to enable WebGL, if available */
+        /** if we should try to enable WebGL, if available */
         disable_web_gl : boolean;
         /** configuration for the seat view */
         seat_config: View.ISeatViewConfig;
@@ -85,7 +85,8 @@ namespace SeatMap {
         /** available seat types */
         export type Type = "Disability" | "ReducedMobility" | "Obese" | "Companion" 
         | "CoupleLeft" | "CoupleRight" | "MotionSimulator" | "SuperD" | "SuperSeat";
-                
+              
+        /** Seat */  
         export class Seat{
             id: string;
             status: Status;

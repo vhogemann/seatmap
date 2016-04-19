@@ -3,9 +3,12 @@
 namespace SeatMap{
     export namespace View {
         
+        /** SeatView configuration options */
         export interface ISeatViewConfig{
             interactive : boolean;
-            icons : {[key:string]:PIXI.Texture}
+            icons : {[key:string]:PIXI.Texture},
+            palette: {[key:string]:number},
+            label_style : PIXI.TextStyle
         }
         
         /** available icons on the default texture */
@@ -21,10 +24,10 @@ namespace SeatMap{
             config : ISeatViewConfig;
             container : PIXI.Container;
             
-            private _sprite_size: number;
-            private _base: PIXI.Sprite;
-            private _label: PIXI.Sprite;
-            private _icon: PIXI.Sprite;
+            protected sprite_size: number;
+            protected base: PIXI.Sprite;
+            protected label: PIXI.Sprite;
+            protected icon: PIXI.Sprite;
             
             private _listeners: ISeatListener<ASeatView>[];
             public addListener(listener:ISeatListener<ASeatView>){
@@ -37,18 +40,18 @@ namespace SeatMap{
             
             constructor(seat:Model.Seat, sprite_size:number, config: ISeatViewConfig){
                 this.seat = seat;
-                this._sprite_size = sprite_size;
+                this.sprite_size = sprite_size;
                 this.config = config;
                 this.container = new PIXI.Container();
                 
-                this._base = this.createBase();
-                this.container.addChild(this._base);
+                this.base = this.createBase();
+                if(!!this.base) this.container.addChild(this.base);
                 
-                this._icon = this.createIcon();
-                this.container.addChild(this._icon);
+                this.icon = this.createIcon();
+                if(!!this.icon) this.container.addChild(this.icon);
                 
-                this._label = this.createIcon();
-                this.container.addChild(this._label);
+                this.label = this.createIcon();
+                if(!!this.label) this.container.addChild(this.label);
                 
                 if(config.interactive){
                     this.container.interactive = true;
@@ -70,6 +73,7 @@ namespace SeatMap{
             public abstract createIcon() : PIXI.Sprite;
         }
         
+        /** SeatView event listener */
         export interface ISeatListener<T extends ASeatView>  {
             onMouseOver(view:T);
             onMouseOut(view:T);
@@ -78,7 +82,6 @@ namespace SeatMap{
         
         /** renders the seatmap background and receives zoom and pan events */
         export class MapView {
-            
             container:PIXI.Container;
             
             constructor(seats:View.ASeatView[]){
@@ -109,30 +112,79 @@ namespace SeatMap{
                 this.addListener(this);
             }
             
+            /** returns the colour of the base according to the seat status */
+            public baseTint() : number {
+                return this.config.palette[this.seat.status];
+            }
+            
             public createBase() : PIXI.Sprite {
+                let base:PIXI.Sprite = null;
                 switch(this.seat.seatType){
                     case "Obese" :
                     case "Companion" :
                     case "ReducedMobility" :
-                        return new PIXI.Sprite(this.config.icons["Square"]);
+                        base = new PIXI.Sprite(this.config.icons["Square"]);
+                        break;
                     case "SuperD" :
                     case "SuperSeat" :
                     case "MotionSimulator" :
-                        return new PIXI.Sprite(this.config.icons["Losangle"]);
+                        base = new PIXI.Sprite(this.config.icons["Losangle"]);
+                        break;
                     case "CoupleLeft" :
-                        return new PIXI.Sprite(this.config.icons["CoupleLeft"]);
+                        base = new PIXI.Sprite(this.config.icons["CoupleLeft"]);
+                        break;
                     case "CoupleRight" :
-                        return new PIXI.Sprite(this.config.icons["CoupleRight"]);
+                        base = new PIXI.Sprite(this.config.icons["CoupleRight"]);
+                        break;
                     default :
-                        return new PIXI.Sprite(this.config.icons["Circle"]);
+                        base = new PIXI.Sprite(this.config.icons["Circle"]);
+                }
+                
+                //Define anchor and center the sprite
+                base.width = this.sprite_size;
+                base.height = this.sprite_size;
+                base.anchor = new PIXI.Point( 0.5, 0.5 );
+                base.position = new PIXI.Point( this.sprite_size/2, this.sprite_size/2 );
+                
+                //Colour of the sprite
+                base.tint = this.baseTint();
+                
+                return base;
+            }
+            
+            public showLabel() : boolean {
+                switch (this.seat.seatType) {
+                    case "Occupied":
+                    case "Available":
+                        return false ;
+                    case "Selected":
+                    default:
+                        return true;
                 }
             }
             
+            public showIcon() : boolean { return !this.showLabel(); }
+            
             public createLabel() : PIXI.Sprite{
-                return null;
+                let label = new PIXI.Text(this.seat.label,this.config.label_style);
+                //centers the text on both axis
+                label.position = new PIXI.Point(
+                    ( 50 - label.width ) / 2,
+                    ( 50 - label.height ) / 2
+                );
+                
+                label.alpha = this.showLabel() ? 1 : 0;
+                
+                return label;
             }
             
             public createIcon() : PIXI.Sprite {
+                let texture = this.config.icons[this.seat.seatType];
+                if(!!texture){
+                    let icon = new PIXI.Sprite(texture);
+                    icon.alpha = this.showLabel() ? 1 : 0;
+                    return icon;
+                }
                 return null;
             }
             

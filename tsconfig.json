@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "outFile": "scripts/seat_map.js",
-        "rootDir": "src"
+        "rootDir": "src",
+        "target": "es3"
     },
     "exclude": [
         "assets",
