@@ -11,6 +11,8 @@ namespace SeatMap{
             label_style : PIXI.TextStyle
         }
         
+        
+        
         /** available icons on the default texture */
         export type IconName = 
             "Obese"|"Companion"|"SuperD"|"Disability"|"MotionSimulator"
@@ -43,6 +45,11 @@ namespace SeatMap{
                 this.sprite_size = sprite_size;
                 this.config = config;
                 this.container = new PIXI.Container();
+                
+                this.container.position = new PIXI.Point(
+                    seat.column * sprite_size,
+                    seat.line * sprite_size
+                );
                 
                 this.base = this.createBase();
                 if(!!this.base) this.container.addChild(this.base);

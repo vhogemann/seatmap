@@ -17,15 +17,16 @@ var SeatMap;
                 this.sprite_size = sprite_size;
                 this.config = config;
                 this.container = new PIXI.Container();
-                this._base = this.createBase();
-                if (!!this._base)
-                    this.container.addChild(this._base);
-                this._icon = this.createIcon();
-                if (!!this._icon)
-                    this.container.addChild(this._icon);
-                this._label = this.createIcon();
-                if (!!this._label)
-                    this.container.addChild(this._label);
+                this.container.position = new PIXI.Point(seat.column * sprite_size, seat.line * sprite_size);
+                this.base = this.createBase();
+                if (!!this.base)
+                    this.container.addChild(this.base);
+                this.icon = this.createIcon();
+                if (!!this.icon)
+                    this.container.addChild(this.icon);
+                this.label = this.createIcon();
+                if (!!this.label)
+                    this.container.addChild(this.label);
                 if (config.interactive) {
                     this.container.interactive = true;
                     this.container
@@ -169,19 +170,49 @@ var SeatMap;
             var width = columns * options.sprite_size;
             var height = columns * options.sprite_size;
             var seat_views = new Array();
-            //TODO: See if the seat from JSON can be directly mapped as a Model.Seat
-            data.seatmap.lines.forEach(function (l) {
-                l.seats.forEach(function (s) {
-                    var seat = new Model.Seat(s);
-                    _this._seats_map[seat.id] = seat;
-                    _this._seats_arr.push(seat);
-                    seat_views.push(new SeatMap.View.DefaultSeatView(seat, options.sprite_size, null));
+            var loader = PIXI.loader.add(["assets/texture.json"]);
+            loader.load(function () {
+                var SEAT_CONFIG = {
+                    interactive: false,
+                    icons: {
+                        "Obese": PIXI.Texture.fromFrame("Obese.png"),
+                        "Companion": PIXI.Texture.fromFrame("Companion.png"),
+                        "SuperD": PIXI.Texture.fromFrame("SuperD.png"),
+                        "Disability": PIXI.Texture.fromFrame("Disability.png"),
+                        "MotionSimulator": PIXI.Texture.fromFrame("MotionSimulator.png"),
+                        "ReducedMobility": PIXI.Texture.fromFrame("ReducedMobility.png"),
+                        "Couple": PIXI.Texture.fromFrame("Couple.png"),
+                        //"SuperSeat": PIXI.Texture.fromFrame("SuperSeat.png"),
+                        "Circle": PIXI.Texture.fromFrame("Circle.png"),
+                        "Square": PIXI.Texture.fromFrame("Square.png"),
+                        "Losangle": PIXI.Texture.fromFrame("Losangle.png"),
+                        "CoupleLeft": PIXI.Texture.fromFrame("CoupleLeft.png"),
+                        "CoupleRight": PIXI.Texture.fromFrame("CoupleRight.png")
+                    },
+                    palette: {
+                        "Available": 0x0cb0b1,
+                        "Occupied": 0xdbdbdb,
+                        "Selected": 0xd3793d
+                    },
+                    label_style: {
+                        font: 'bold 50px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                    }
+                };
+                //TODO: See if the seat from JSON can be directly mapped as a Model.Seat
+                data.lines.forEach(function (l) {
+                    l.seats.forEach(function (s) {
+                        var seat = new Model.Seat(s);
+                        _this._seats_map[seat.id] = seat;
+                        _this._seats_arr.push(seat);
+                        seat_views.push(new SeatMap.View.DefaultSeatView(seat, options.sprite_size, SEAT_CONFIG));
+                    });
                 });
+                var map = new SeatMap.View.MapView(seat_views);
+                _this._container = map.container;
+                _this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xFFF }, options.disable_web_gl);
+                el.appendChild(_this._renderer.view);
+                _this.animate();
             });
-            var map = new SeatMap.View.MapView(seat_views);
-            this._container = map.container;
-            this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xFFF }, options.disable_web_gl);
-            el.appendChild(this._renderer.view);
         }
         /** updates the state of a given seat */
         Map.prototype.setSeatState = function (seatId, state) {
@@ -198,7 +229,8 @@ var SeatMap;
         };
         /** main animation loop */
         Map.prototype.animate = function () {
-            requestAnimationFrame(this.animate);
+            var animate = this.animate;
+            requestAnimationFrame(animate);
             this._renderer.render(this._container);
         };
         return Map;
@@ -220,3 +252,4 @@ var SeatMap;
         Model.Seat = Seat;
     })(Model = SeatMap.Model || (SeatMap.Model = {}));
 })(SeatMap || (SeatMap = {}));
+//# sourceMappingURL=seat_map.js.map
