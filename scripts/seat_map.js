@@ -19,12 +19,14 @@ var SeatMap;
                 this.container = new PIXI.Container();
                 this.container.position = new PIXI.Point(seat.column * sprite_size, seat.line * sprite_size);
                 this.base = this.createBase();
-                if (!!this.base)
+                if (!!this.base) {
                     this.container.addChild(this.base);
+                    this.base_scale = this.base.scale.x;
+                }
                 this.icon = this.createIcon();
                 if (!!this.icon)
                     this.container.addChild(this.icon);
-                this.label = this.createIcon();
+                this.label = this.createLabel();
                 if (!!this.label)
                     this.container.addChild(this.label);
                 if (config.interactive) {
@@ -39,6 +41,7 @@ var SeatMap;
                         .on("mouseout", function (ev) { if (!!_this._listeners)
                         _this._listeners.forEach(function (l) { return l.onMouseOut(_this); }); });
                 }
+                this.addListener(this);
             }
             ASeatView.prototype.addListener = function (listener) {
                 if (this._listeners == null) {
@@ -46,9 +49,67 @@ var SeatMap;
                 }
                 this._listeners.push(listener);
             };
+            ASeatView.prototype.onMouseOver = function (view) {
+                //nothing to do
+            };
+            ASeatView.prototype.onMouseOut = function (view) {
+                //nothing to do
+            };
+            ASeatView.prototype.onClick = function (view) {
+                switch (view.seat.status) {
+                    case "Selected":
+                        view.seat.status = "Available";
+                        break;
+                    case "Available":
+                        view.seat.status = "Selected";
+                        break;
+                }
+            };
             return ASeatView;
         }());
         View.ASeatView = ASeatView;
+        var DefaultSeatListener = (function () {
+            function DefaultSeatListener() {
+            }
+            DefaultSeatListener.prototype.onMouseOver = function (view) {
+                switch (view.seat.status) {
+                    case "Occupied": break;
+                    case "Available":
+                        if (!!view.icon)
+                            view.icon.alpha = 0;
+                        view.label.alpha = 1;
+                    default:
+                        var scale = view.base_scale * 1.2;
+                        view.base.scale = new PIXI.Point(scale, scale);
+                }
+            };
+            DefaultSeatListener.prototype.onMouseOut = function (view) {
+                view.base.scale = new PIXI.Point(view.base_scale, view.base_scale);
+                if (view.seat.status == "Available") {
+                    if (!!view.icon)
+                        view.icon.alpha = 1;
+                    view.label.alpha = 0;
+                }
+            };
+            DefaultSeatListener.prototype.onClick = function (view) {
+                switch (view.seat.status) {
+                    case "Selected":
+                        view.base.tint = view.config.palette["Selected"];
+                        if (!!view.icon)
+                            view.icon.alpha = 0;
+                        view.label.alpha = 1;
+                        break;
+                    case "Available":
+                        view.base.tint = view.config.palette["Available"];
+                        if (!!view.icon)
+                            view.icon.alpha = 1;
+                        view.label.alpha = 0;
+                        break;
+                }
+            };
+            return DefaultSeatListener;
+        }());
+        View.DefaultSeatListener = DefaultSeatListener;
         /** renders the seatmap background and receives zoom and pan events */
         var MapView = (function () {
             function MapView(seats, width, height) {
@@ -74,13 +135,9 @@ var SeatMap;
             __extends(DefaultSeatView, _super);
             function DefaultSeatView(seat, sprite_size, config) {
                 _super.call(this, seat, sprite_size, config);
-                /*
-                 Now this instance is listening to its container mouse events,
-                 and can change it's own appareance based on them.
-                 */
-                this.addListener(this);
+                this.addListener(new DefaultSeatListener());
             }
-            /** returns the colour of the base according to the seat status */
+            /** returns the colour of the base according to Bthe seat status */
             DefaultSeatView.prototype.baseTint = function () {
                 return this.config.palette[this.seat.status];
             };
@@ -116,7 +173,7 @@ var SeatMap;
                 return base;
             };
             DefaultSeatView.prototype.showLabel = function () {
-                switch (this.seat.seatType) {
+                switch (this.seat.status) {
                     case "Occupied":
                     case "Available":
                         return false;
@@ -125,19 +182,22 @@ var SeatMap;
                         return true;
                 }
             };
-            DefaultSeatView.prototype.showIcon = function () { return !this.showLabel(); };
             DefaultSeatView.prototype.createLabel = function () {
-                var label = new PIXI.Text(this.seat.label, this.config.label_style);
+                var text = this.seat.label.replace(/\s/g, "");
+                var label = new PIXI.Text(text, this.config.label_style);
                 //centers the text on both axis
                 label.position = new PIXI.Point((this.sprite_size - label.width) / 2, (this.sprite_size - label.height) / 2);
                 label.alpha = this.showLabel() ? 1 : 0;
                 return label;
             };
+            DefaultSeatView.prototype.showIcon = function () {
+                return this.seat.status == "Available" || this.seat.status == "Occupied";
+            };
             DefaultSeatView.prototype.createIcon = function () {
                 var texture = this.config.icons[this.seat.seatType];
                 if (!!texture) {
                     var icon = new PIXI.Sprite(texture);
-                    icon.alpha = this.showLabel() ? 1 : 0;
+                    icon.alpha = this.showIcon() ? 1 : 0;
                     var icon_size = this.sprite_size * 0.6;
                     icon.width = icon_size;
                     icon.height = icon_size;
@@ -146,12 +206,6 @@ var SeatMap;
                     return icon;
                 }
                 return null;
-            };
-            DefaultSeatView.prototype.onMouseOver = function (view) {
-            };
-            DefaultSeatView.prototype.onMouseOut = function (view) {
-            };
-            DefaultSeatView.prototype.onClick = function (view) {
             };
             return DefaultSeatView;
         }(ASeatView));
@@ -180,7 +234,7 @@ var SeatMap;
             var loader = PIXI.loader.add(["assets/texture.json"]);
             loader.load(function () {
                 var SEAT_CONFIG = {
-                    interactive: false,
+                    interactive: true,
                     icons: {
                         "Obese": PIXI.Texture.fromFrame("Obese.png"),
                         "Companion": PIXI.Texture.fromFrame("Companion.png"),
@@ -202,7 +256,7 @@ var SeatMap;
                         "Selected": 0xd3793d
                     },
                     label_style: {
-                        font: 'bold 50px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                        font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
                     }
                 };
                 //TODO: See if the seat from JSON can be directly mapped as a Model.Seat

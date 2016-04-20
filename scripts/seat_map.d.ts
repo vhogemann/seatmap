@@ -15,15 +15,16 @@ declare namespace SeatMap {
         /** available icons on the default texture */
         type IconName = "Obese" | "Companion" | "SuperD" | "Disability" | "MotionSimulator" | "ReducedMobility" | "Couple" | "SuperSeat" | "Circle" | "Square" | "Losangle" | "CoupleLeft" | "CoupleRight";
         /** base SeatView implementation, boilerplate goes here */
-        abstract class ASeatView {
+        abstract class ASeatView implements ISeatListener<DefaultSeatView> {
             /** internal state of the view */
             seat: Model.Seat;
             config: ISeatViewConfig;
             container: PIXI.Container;
-            protected sprite_size: number;
-            protected base: PIXI.Sprite;
-            protected label: PIXI.Sprite;
-            protected icon: PIXI.Sprite;
+            sprite_size: number;
+            base: PIXI.Sprite;
+            label: PIXI.Sprite;
+            icon: PIXI.Sprite;
+            base_scale: number;
             private _listeners;
             addListener(listener: ISeatListener<ASeatView>): void;
             constructor(seat: Model.Seat, sprite_size: number, config: ISeatViewConfig);
@@ -33,12 +34,20 @@ declare namespace SeatMap {
             abstract createLabel(): PIXI.Sprite;
             /** icon indicating that this is an special seat */
             abstract createIcon(): PIXI.Sprite;
+            onMouseOver(view: DefaultSeatView): void;
+            onMouseOut(view: DefaultSeatView): void;
+            onClick(view: DefaultSeatView): void;
         }
         /** SeatView event listener */
         interface ISeatListener<T extends ASeatView> {
             onMouseOver(view: T): any;
             onMouseOut(view: T): any;
             onClick(view: T): any;
+        }
+        class DefaultSeatListener implements ISeatListener<DefaultSeatView> {
+            onMouseOver(view: DefaultSeatView): void;
+            onMouseOut(view: DefaultSeatView): void;
+            onClick(view: DefaultSeatView): void;
         }
         /** renders the seatmap background and receives zoom and pan events */
         class MapView {
@@ -50,18 +59,15 @@ declare namespace SeatMap {
             moveTo(x: number, y: number): void;
         }
         /** Default SeatView implementation */
-        class DefaultSeatView extends ASeatView implements ISeatListener<DefaultSeatView> {
+        class DefaultSeatView extends ASeatView {
             constructor(seat: Model.Seat, sprite_size: number, config: ISeatViewConfig);
-            /** returns the colour of the base according to the seat status */
+            /** returns the colour of the base according to Bthe seat status */
             baseTint(): number;
             createBase(): PIXI.Sprite;
             showLabel(): boolean;
-            showIcon(): boolean;
             createLabel(): PIXI.Sprite;
+            showIcon(): boolean;
             createIcon(): PIXI.Sprite;
-            onMouseOver(view: DefaultSeatView): void;
-            onMouseOut(view: DefaultSeatView): void;
-            onClick(view: DefaultSeatView): void;
         }
     }
 }

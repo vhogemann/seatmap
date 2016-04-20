@@ -44,7 +44,7 @@ namespace SeatMap {
             loader.load(() => {
                 
                 let SEAT_CONFIG : View.ISeatViewConfig = {
-                    interactive : false,
+                    interactive : true,
                     icons : {
                         "Obese": PIXI.Texture.fromFrame("Obese.png"),
                         "Companion": PIXI.Texture.fromFrame("Companion.png"),
@@ -66,7 +66,7 @@ namespace SeatMap {
                         "Selected" : 0xd3793d
                     },
                     label_style: {
-                        font : 'bold 50px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                        font : 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
                     }
                 }
                                 

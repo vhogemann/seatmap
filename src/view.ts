@@ -11,32 +11,33 @@ namespace SeatMap{
             label_style : PIXI.TextStyle
         }
         
-        
-        
         /** available icons on the default texture */
         export type IconName = 
             "Obese"|"Companion"|"SuperD"|"Disability"|"MotionSimulator"
             |"ReducedMobility"|"Couple"|"SuperSeat"|"Circle"|"Square"
             |"Losangle"|"CoupleLeft"|"CoupleRight";
         
+        
+        
         /** base SeatView implementation, boilerplate goes here */
-        export abstract class ASeatView {
+        export abstract class ASeatView implements ISeatListener<DefaultSeatView> {
             /** internal state of the view */
             seat : Model.Seat;
             config : ISeatViewConfig;
             container : PIXI.Container;
             
-            protected sprite_size: number;
-            protected base: PIXI.Sprite;
-            protected label: PIXI.Sprite;
-            protected icon: PIXI.Sprite;
+            public sprite_size: number;
+            public base: PIXI.Sprite;
+            public label: PIXI.Sprite;
+            public icon: PIXI.Sprite;
+            
+            public base_scale:number;
             
             private _listeners: ISeatListener<ASeatView>[];
             public addListener(listener:ISeatListener<ASeatView>){
                 if(this._listeners == null ){
                     this._listeners = [];
                 }
-                
                 this._listeners.push(listener);
             }
             
@@ -52,12 +53,15 @@ namespace SeatMap{
                 );
                 
                 this.base = this.createBase();
-                if(!!this.base) this.container.addChild(this.base);
+                if(!!this.base) { 
+                    this.container.addChild(this.base);
+                    this.base_scale = this.base.scale.x;
+                }
                 
                 this.icon = this.createIcon();
                 if(!!this.icon) this.container.addChild(this.icon);
                 
-                this.label = this.createIcon();
+                this.label = this.createLabel();
                 if(!!this.label) this.container.addChild(this.label);
                 
                 if(config.interactive){
@@ -68,6 +72,8 @@ namespace SeatMap{
                         .on("mouseover",ev => {if(!!this._listeners) this._listeners.forEach(l => l.onMouseOver( this ))})
                         .on("mouseout",ev => {if(!!this._listeners) this._listeners.forEach(l => l.onMouseOut( this ))});
                 }
+                
+                this.addListener(this);
             }
             
             /** returns the bottom layer of the seat */
@@ -78,6 +84,26 @@ namespace SeatMap{
             
             /** icon indicating that this is an special seat */
             public abstract createIcon() : PIXI.Sprite;
+            
+            public onMouseOver(view:DefaultSeatView){
+                //nothing to do
+            }
+            
+            public onMouseOut(view:DefaultSeatView){
+                //nothing to do
+            }
+            
+            public onClick(view:DefaultSeatView){
+                switch (view.seat.status) {
+                    case "Selected":
+                        view.seat.status = "Available";
+                        break;
+                    case "Available":
+                        view.seat.status = "Selected";
+                        break;
+                }
+            }
+            
         }
         
         /** SeatView event listener */
@@ -85,6 +111,48 @@ namespace SeatMap{
             onMouseOver(view:T);
             onMouseOut(view:T);
             onClick(view:T);
+        }
+        
+        export class DefaultSeatListener implements ISeatListener<DefaultSeatView>
+        {
+            public onMouseOver(view:DefaultSeatView){
+                switch(view.seat.status){
+                    case "Occupied" : break;
+                    case "Available" :
+                        if(!!view.icon)
+                            view.icon.alpha = 0;
+                        view.label.alpha = 1;
+                    default :
+                      let scale = view.base_scale * 1.2;
+                      view.base.scale = new PIXI.Point(scale, scale);
+                 }
+            }
+            
+            public onMouseOut(view:DefaultSeatView){
+                view.base.scale = new PIXI.Point(view.base_scale, view.base_scale);
+                if(view.seat.status == "Available"){
+                    if(!!view.icon)
+                        view.icon.alpha = 1;
+                    view.label.alpha = 0;
+                }
+            }
+            
+            public onClick(view:DefaultSeatView){
+                 switch (view.seat.status) {
+                     case "Selected":
+                         view.base.tint = view.config.palette["Selected"];
+                         if(!!view.icon)
+                            view.icon.alpha = 0;
+                         view.label.alpha = 1;
+                         break;
+                    case "Available":
+                        view.base.tint = view.config.palette["Available"];
+                        if(!!view.icon)
+                            view.icon.alpha = 1;
+                        view.label.alpha = 0;
+                        break;
+                 }
+            }
         }
         
         /** renders the seatmap background and receives zoom and pan events */
@@ -111,17 +179,14 @@ namespace SeatMap{
         }
         
         /** Default SeatView implementation */
-        export class DefaultSeatView extends ASeatView implements ISeatListener<DefaultSeatView>{
+        export class DefaultSeatView extends ASeatView {
+            
             constructor(seat:Model.Seat, sprite_size:number, config: ISeatViewConfig){
                 super(seat,sprite_size,config);
-                /* 
-                 Now this instance is listening to its container mouse events,
-                 and can change it's own appareance based on them.
-                 */
-                this.addListener(this);
+                this.addListener(new DefaultSeatListener());
             }
             
-            /** returns the colour of the base according to the seat status */
+            /** returns the colour of the base according to Bthe seat status */
             public baseTint() : number {
                 return this.config.palette[this.seat.status];
             }
@@ -162,7 +227,7 @@ namespace SeatMap{
             }
             
             public showLabel() : boolean {
-                switch (this.seat.seatType) {
+                switch (this.seat.status) {
                     case "Occupied":
                     case "Available":
                         return false ;
@@ -172,10 +237,9 @@ namespace SeatMap{
                 }
             }
             
-            public showIcon() : boolean { return !this.showLabel(); }
-            
             public createLabel() : PIXI.Sprite{
-                let label = new PIXI.Text(this.seat.label,this.config.label_style);
+                let text = this.seat.label.replace(/\s/g, "");
+                let label = new PIXI.Text(text, this.config.label_style);
                 //centers the text on both axis
                 label.position = new PIXI.Point(
                     ( this.sprite_size - label.width ) / 2,
@@ -187,11 +251,14 @@ namespace SeatMap{
                 return label;
             }
             
+            public showIcon() : boolean { 
+                return this.seat.status == "Available" || this.seat.status == "Occupied"; 
+            }
             public createIcon() : PIXI.Sprite {
                 let texture = this.config.icons[this.seat.seatType];
                 if(!!texture){
                     let icon = new PIXI.Sprite(texture);
-                    icon.alpha = this.showLabel() ? 1 : 0;
+                    icon.alpha = this.showIcon() ? 1 : 0;
                     let icon_size = this.sprite_size * 0.6;
                     icon.width = icon_size;
                     icon.height = icon_size;
@@ -203,18 +270,6 @@ namespace SeatMap{
                     return icon;
                 }
                 return null;
-            }
-            
-            public onMouseOver(view:DefaultSeatView){
-                
-            }
-            
-            public onMouseOut(view:DefaultSeatView){
-                
-            }
-            
-            public onClick(view:DefaultSeatView){
-                
             }
         }
         
