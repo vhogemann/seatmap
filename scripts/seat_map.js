@@ -138,8 +138,11 @@ var SeatMap;
                 if (!!texture) {
                     var icon = new PIXI.Sprite(texture);
                     icon.alpha = this.showLabel() ? 1 : 0;
-                    icon.width = this.sprite_size;
-                    icon.height = this.sprite_size;
+                    var icon_size = this.sprite_size * 0.6;
+                    icon.width = icon_size;
+                    icon.height = icon_size;
+                    icon.anchor = new PIXI.Point(0.5, 0.5);
+                    icon.position = new PIXI.Point(this.sprite_size / 2, this.sprite_size / 2);
                     return icon;
                 }
                 return null;
