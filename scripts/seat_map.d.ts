@@ -43,7 +43,7 @@ declare namespace SeatMap {
         /** renders the seatmap background and receives zoom and pan events */
         class MapView {
             container: PIXI.Container;
-            constructor(seats: View.ASeatView[]);
+            constructor(seats: View.ASeatView[], width: number, height: number);
             /** sets the map scale, and centers aroud the point given by x and y */
             setScale(scale: number, x: number, y: number): void;
             /** positions the map relative to its origin */
@@ -77,13 +77,16 @@ declare namespace SeatMap {
         /** configuration for the seat view */
         seat_config: View.ISeatViewConfig;
     }
+    interface ReadyCallback {
+        (map: Map): void;
+    }
     /** This class initializes and renders the SeatMap */
     class Map {
         private _seats_map;
         private _seats_arr;
         private _renderer;
         private _container;
-        constructor(el: HTMLElement, data: any, options: IMapOptions);
+        constructor(el: HTMLElement, data: any, options: IMapOptions, onReady: ReadyCallback);
         /** updates the state of a given seat */
         setSeatState(seatId: string, state: Model.Status): void;
         /** returns the seat with the given Id */

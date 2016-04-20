@@ -51,9 +51,11 @@ var SeatMap;
         View.ASeatView = ASeatView;
         /** renders the seatmap background and receives zoom and pan events */
         var MapView = (function () {
-            function MapView(seats) {
+            function MapView(seats, width, height) {
                 var _this = this;
                 this.container = new PIXI.Container();
+                this.container.width = width;
+                this.container.height = height;
                 seats.forEach(function (s) { return _this.container.addChild(s.container); });
             }
             /** sets the map scale, and centers aroud the point given by x and y */
@@ -127,7 +129,7 @@ var SeatMap;
             DefaultSeatView.prototype.createLabel = function () {
                 var label = new PIXI.Text(this.seat.label, this.config.label_style);
                 //centers the text on both axis
-                label.position = new PIXI.Point((50 - label.width) / 2, (50 - label.height) / 2);
+                label.position = new PIXI.Point((this.sprite_size - label.width) / 2, (this.sprite_size - label.height) / 2);
                 label.alpha = this.showLabel() ? 1 : 0;
                 return label;
             };
@@ -136,6 +138,8 @@ var SeatMap;
                 if (!!texture) {
                     var icon = new PIXI.Sprite(texture);
                     icon.alpha = this.showLabel() ? 1 : 0;
+                    icon.width = this.sprite_size;
+                    icon.height = this.sprite_size;
                     return icon;
                 }
                 return null;
@@ -157,7 +161,7 @@ var SeatMap;
 (function (SeatMap) {
     /** This class initializes and renders the SeatMap */
     var Map = (function () {
-        function Map(el, data, options) {
+        function Map(el, data, options, onReady) {
             var _this = this;
             this._seats_map = {};
             this._seats_arr = new Array();
@@ -207,11 +211,11 @@ var SeatMap;
                         seat_views.push(new SeatMap.View.DefaultSeatView(seat, options.sprite_size, SEAT_CONFIG));
                     });
                 });
-                var map = new SeatMap.View.MapView(seat_views);
+                var map = new SeatMap.View.MapView(seat_views, width, height);
                 _this._container = map.container;
-                _this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xFFF }, options.disable_web_gl);
+                _this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, options.disable_web_gl);
                 el.appendChild(_this._renderer.view);
-                _this.animate();
+                onReady(_this);
             });
         }
         /** updates the state of a given seat */
@@ -229,8 +233,6 @@ var SeatMap;
         };
         /** main animation loop */
         Map.prototype.animate = function () {
-            var animate = this.animate;
-            requestAnimationFrame(animate);
             this._renderer.render(this._container);
         };
         return Map;
@@ -242,10 +244,11 @@ var SeatMap;
         var Seat = (function () {
             function Seat(seat) {
                 this.id = seat.id;
-                this.status = seat.state;
+                this.status = seat.status;
                 this.label = seat.label;
-                this.line = seat.row;
-                this.seatType = seat.type;
+                this.line = seat.line;
+                this.column = seat.column;
+                this.seatType = seat["type"];
             }
             return Seat;
         }());

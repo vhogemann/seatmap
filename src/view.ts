@@ -91,8 +91,10 @@ namespace SeatMap{
         export class MapView {
             container:PIXI.Container;
             
-            constructor(seats:View.ASeatView[]){
+            constructor(seats:View.ASeatView[], width:number, height: number){
                 this.container = new PIXI.Container();
+                this.container.width = width;
+                this.container.height = height;
                 seats.forEach( s => this.container.addChild(s.container));
             }
             
@@ -176,8 +178,8 @@ namespace SeatMap{
                 let label = new PIXI.Text(this.seat.label,this.config.label_style);
                 //centers the text on both axis
                 label.position = new PIXI.Point(
-                    ( 50 - label.width ) / 2,
-                    ( 50 - label.height ) / 2
+                    ( this.sprite_size - label.width ) / 2,
+                    ( this.sprite_size - label.height ) / 2
                 );
                 
                 label.alpha = this.showLabel() ? 1 : 0;
@@ -190,6 +192,8 @@ namespace SeatMap{
                 if(!!texture){
                     let icon = new PIXI.Sprite(texture);
                     icon.alpha = this.showLabel() ? 1 : 0;
+                    icon.width = this.sprite_size;
+                    icon.height = this.sprite_size;
                     return icon;
                 }
                 return null;

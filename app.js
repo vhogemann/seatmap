@@ -8,6 +8,13 @@ ajax.onload = function () {
         disable_web_gl : true,
         sprite_size : 64,
         texture_map : 'assets/texture.json'
+    },
+    function(m){
+        var animate = function(){
+            m.animate();
+            requestAnimationFrame(animate);
+        }
+        animate();
     });
 };
 
