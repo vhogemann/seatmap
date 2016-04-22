@@ -11,6 +11,13 @@ namespace SeatMap{
             label_style : PIXI.TextStyle
         }
         
+        /** Stage configuration options */
+        export interface IStageConfig{
+            labelName: string,
+            labelStyle: any,
+            color: number
+        }
+        
         /** available icons on the default texture */
         export type IconName = 
             "Obese"|"Companion"|"SuperD"|"Disability"|"MotionSimulator"
@@ -272,6 +279,37 @@ namespace SeatMap{
                 return null;
             }
         }
+        
+        /** Default stage view implementation*/
+        export class DefaultStageView{
+            container: PIXI.Graphics;
+            
+            constructor(stage: any, spriteSize: number, options: IStageConfig){
+                
+                let stageHeight: number = (Math.abs(stage.lowerRight.line - stage.upperLeft.line) + 1) * spriteSize;
+                let stageWidth: number = ((stage.lowerRight.column - stage.upperLeft.column) + 1) * spriteSize;  
+                let stageY: number = stage.upperLeft.line * spriteSize;
+                let stageX: number = stage.upperLeft.column * spriteSize;
+                
+                this.container = new PIXI.Graphics();
+                
+                this.container.beginFill(options.color, 1);
+                
+                
+                
+                this.container.drawRect(stageX, stageY, stageWidth, stageHeight);
+                                                               
+                this.container.endFill();
+                
+                let label = new PIXI.Text(options.labelName, options.labelStyle);
+                label.position = new PIXI.Point(
+                    (stageWidth  / 2) - (label.width / 2),
+                    stageY + ((spriteSize - label.height )/2)
+                );
+                
+                this.container.addChild(label);
+            }
+        } 
         
     }
 }

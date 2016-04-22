@@ -69,7 +69,15 @@ namespace SeatMap {
                         font : 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
                     }
                 }
-                                
+                            
+                let STAGE_CONFIG: View.IStageConfig = {
+                    color : 0x666666,
+                    labelName: "TELA",
+                    labelStyle: {
+                        font : 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                    }
+                };
+                    
                 //TODO: See if the seat from JSON can be directly mapped as a Model.Seat
                 data.lines.forEach(l => {
                     l.seats.forEach(s => {
@@ -80,6 +88,8 @@ namespace SeatMap {
                     });
                 });
                 let map = new View.MapView(seat_views, width, height);
+                let stage = new View.DefaultStageView(data.stage, options.sprite_size, STAGE_CONFIG);
+                map.container.addChild(stage.container);
                 this._container = map.container;
                 this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, options.disable_web_gl);
                 el.appendChild(this._renderer.view);

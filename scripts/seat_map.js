@@ -210,6 +210,23 @@ var SeatMap;
             return DefaultSeatView;
         }(ASeatView));
         View.DefaultSeatView = DefaultSeatView;
+        var DefaultStageView = (function () {
+            function DefaultStageView(stage, spriteSize, options) {
+                var stageHeight = (Math.abs(stage.lowerRight.line - stage.upperLeft.line) + 1) * spriteSize;
+                var stageWidth = ((stage.lowerRight.column - stage.upperLeft.column) + 1) * spriteSize;
+                var stageY = stage.upperLeft.line * spriteSize;
+                var stageX = stage.upperLeft.column * spriteSize;
+                this.container = new PIXI.Graphics();
+                this.container.beginFill(options.color, 1);
+                this.container.drawRect(stageX, stageY, stageWidth, stageHeight);
+                this.container.endFill();
+                var label = new PIXI.Text(options.labelName, options.labelStyle);
+                label.position = new PIXI.Point((stageWidth / 2) - (label.width / 2), stageY + ((spriteSize - label.height) / 2));
+                this.container.addChild(label);
+            }
+            return DefaultStageView;
+        }());
+        View.DefaultStageView = DefaultStageView;
     })(View = SeatMap.View || (SeatMap.View = {}));
 })(SeatMap || (SeatMap = {}));
 /// <reference path="../typings/main.d.ts" />
@@ -259,6 +276,13 @@ var SeatMap;
                         font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
                     }
                 };
+                var STAGE_CONFIG = {
+                    color: 0x666666,
+                    labelName: "TELA",
+                    labelStyle: {
+                        font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                    }
+                };
                 //TODO: See if the seat from JSON can be directly mapped as a Model.Seat
                 data.lines.forEach(function (l) {
                     l.seats.forEach(function (s) {
@@ -269,6 +293,8 @@ var SeatMap;
                     });
                 });
                 var map = new SeatMap.View.MapView(seat_views, width, height);
+                var stage = new SeatMap.View.DefaultStageView(data.stage, options.sprite_size, STAGE_CONFIG);
+                map.container.addChild(stage.container);
                 _this._container = map.container;
                 _this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, options.disable_web_gl);
                 el.appendChild(_this._renderer.view);
