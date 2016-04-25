@@ -247,7 +247,6 @@ namespace SeatMap{
                 );
                 
                 label.alpha = this.showLabel() ? 1 : 0;
-                
                 return label;
             }
             
