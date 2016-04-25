@@ -12,6 +12,12 @@ declare namespace SeatMap {
             };
             label_style: PIXI.TextStyle;
         }
+        /** Stage configuration options */
+        interface IStageConfig {
+            labelName: string;
+            labelStyle: any;
+            color: number;
+        }
         /** available icons on the default texture */
         type IconName = "Obese" | "Companion" | "SuperD" | "Disability" | "MotionSimulator" | "ReducedMobility" | "Couple" | "SuperSeat" | "Circle" | "Square" | "Losangle" | "CoupleLeft" | "CoupleRight";
         /** base SeatView implementation, boilerplate goes here */
@@ -68,6 +74,10 @@ declare namespace SeatMap {
             createLabel(): PIXI.Sprite;
             showIcon(): boolean;
             createIcon(): PIXI.Sprite;
+        }
+        class DefaultStageView {
+            container: PIXI.Graphics;
+            constructor(stage: any, spriteSize: number, options: IStageConfig);
         }
     }
 }
