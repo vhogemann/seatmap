@@ -1,5 +1,6 @@
 /// <reference path="../typings/main.d.ts" />
 /// <reference path="./view.ts" />
+/// <reference path="./panzoom.ts" />
 
 namespace SeatMap {
     /** configuration options */
@@ -87,12 +88,16 @@ namespace SeatMap {
                         seat_views.push(new View.DefaultSeatView(seat, options.sprite_size, SEAT_CONFIG));
                     });
                 });
-                let map = new View.MapView(seat_views, width, height);
+                let map = new View.DefaultMapView(seat_views, width, height);
                 let stage = new View.DefaultStageView(data.stage, options.sprite_size, STAGE_CONFIG);
+                
                 map.container.addChild(stage.container);
                 this._container = map.container;
                 this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, options.disable_web_gl);
                 el.appendChild(this._renderer.view);
+                
+                new View.D3ZoomBehavior(this._renderer.view, map, width, height);
+                
                 onReady(this);
             });
 

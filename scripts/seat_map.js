@@ -4,6 +4,117 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /// <reference path="../typings/main.d.ts" />
+/// <reference path="./view.ts" />
+/// <reference path="./panzoom.ts" />
+var SeatMap;
+(function (SeatMap) {
+    /** This class initializes and renders the SeatMap */
+    var Map = (function () {
+        function Map(el, data, options, onReady) {
+            var _this = this;
+            this._seats_map = {};
+            this._seats_arr = new Array();
+            /*
+             Canvas dimensions are calculated from the map columns and rows
+             and the maximum sprite size/resolution;
+             */
+            var columns = data.bounds.columns;
+            var rows = data.bounds.rows;
+            var width = columns * options.sprite_size;
+            var height = columns * options.sprite_size;
+            var seat_views = new Array();
+            var loader = PIXI.loader.add(["assets/texture.json"]);
+            loader.load(function () {
+                var SEAT_CONFIG = {
+                    interactive: true,
+                    icons: {
+                        "Obese": PIXI.Texture.fromFrame("Obese.png"),
+                        "Companion": PIXI.Texture.fromFrame("Companion.png"),
+                        "SuperD": PIXI.Texture.fromFrame("SuperD.png"),
+                        "Disability": PIXI.Texture.fromFrame("Disability.png"),
+                        "MotionSimulator": PIXI.Texture.fromFrame("MotionSimulator.png"),
+                        "ReducedMobility": PIXI.Texture.fromFrame("ReducedMobility.png"),
+                        "Couple": PIXI.Texture.fromFrame("Couple.png"),
+                        //"SuperSeat": PIXI.Texture.fromFrame("SuperSeat.png"),
+                        "Circle": PIXI.Texture.fromFrame("Circle.png"),
+                        "Square": PIXI.Texture.fromFrame("Square.png"),
+                        "Losangle": PIXI.Texture.fromFrame("Losangle.png"),
+                        "CoupleLeft": PIXI.Texture.fromFrame("CoupleLeft.png"),
+                        "CoupleRight": PIXI.Texture.fromFrame("CoupleRight.png")
+                    },
+                    palette: {
+                        "Available": 0x0cb0b1,
+                        "Occupied": 0xdbdbdb,
+                        "Selected": 0xd3793d
+                    },
+                    label_style: {
+                        font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                    }
+                };
+                var STAGE_CONFIG = {
+                    color: 0x666666,
+                    labelName: "TELA",
+                    labelStyle: {
+                        font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
+                    }
+                };
+                //TODO: See if the seat from JSON can be directly mapped as a Model.Seat
+                data.lines.forEach(function (l) {
+                    l.seats.forEach(function (s) {
+                        var seat = new Model.Seat(s);
+                        _this._seats_map[seat.id] = seat;
+                        _this._seats_arr.push(seat);
+                        seat_views.push(new SeatMap.View.DefaultSeatView(seat, options.sprite_size, SEAT_CONFIG));
+                    });
+                });
+                var map = new SeatMap.View.DefaultMapView(seat_views, width, height);
+                var stage = new SeatMap.View.DefaultStageView(data.stage, options.sprite_size, STAGE_CONFIG);
+                map.container.addChild(stage.container);
+                _this._container = map.container;
+                _this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, options.disable_web_gl);
+                el.appendChild(_this._renderer.view);
+                new SeatMap.View.D3ZoomBehavior(_this._renderer.view, map, width, height);
+                onReady(_this);
+            });
+        }
+        /** updates the state of a given seat */
+        Map.prototype.setSeatState = function (seatId, state) {
+            this._seats_map[seatId].status = state;
+        };
+        /** returns the seat with the given Id */
+        Map.prototype.getSeat = function (seatId) {
+            return this._seats_map[seatId];
+        };
+        /** returns every seat with the given state */
+        Map.prototype.getByState = function (state) {
+            var result = this._seats_arr.filter(function (s) { return s.status === state; });
+            return result;
+        };
+        /** main animation loop */
+        Map.prototype.animate = function () {
+            this._renderer.render(this._container);
+        };
+        return Map;
+    }());
+    SeatMap.Map = Map;
+    var Model;
+    (function (Model) {
+        /** Seat */
+        var Seat = (function () {
+            function Seat(seat) {
+                this.id = seat.id;
+                this.status = seat.status;
+                this.label = seat.label;
+                this.line = seat.line;
+                this.column = seat.column;
+                this.seatType = seat["type"];
+            }
+            return Seat;
+        }());
+        Model.Seat = Seat;
+    })(Model = SeatMap.Model || (SeatMap.Model = {}));
+})(SeatMap || (SeatMap = {}));
+/// <reference path="../typings/main.d.ts" />
 /// <reference path="./seatmap.ts" />
 var SeatMap;
 (function (SeatMap) {
@@ -111,8 +222,8 @@ var SeatMap;
         }());
         View.DefaultSeatListener = DefaultSeatListener;
         /** renders the seatmap background and receives zoom and pan events */
-        var MapView = (function () {
-            function MapView(seats, width, height) {
+        var DefaultMapView = (function () {
+            function DefaultMapView(seats, width, height) {
                 var _this = this;
                 this.container = new PIXI.Container();
                 this.container.width = width;
@@ -120,16 +231,17 @@ var SeatMap;
                 seats.forEach(function (s) { return _this.container.addChild(s.container); });
             }
             /** sets the map scale, and centers aroud the point given by x and y */
-            MapView.prototype.setScale = function (scale, x, y) {
+            DefaultMapView.prototype.scale = function (scale, x, y) {
                 this.container.scale = new PIXI.Point(scale, scale);
-            };
-            /** positions the map relative to its origin */
-            MapView.prototype.moveTo = function (x, y) {
                 this.container.position = new PIXI.Point(x, y);
             };
-            return MapView;
+            /** positions the map relative to its origin */
+            DefaultMapView.prototype.moveTo = function (x, y) {
+                this.container.position = new PIXI.Point(x, y);
+            };
+            return DefaultMapView;
         }());
-        View.MapView = MapView;
+        View.DefaultMapView = DefaultMapView;
         /** Default SeatView implementation */
         var DefaultSeatView = (function (_super) {
             __extends(DefaultSeatView, _super);
@@ -210,6 +322,7 @@ var SeatMap;
             return DefaultSeatView;
         }(ASeatView));
         View.DefaultSeatView = DefaultSeatView;
+        /** Default stage view implementation*/
         var DefaultStageView = (function () {
             function DefaultStageView(stage, spriteSize, options) {
                 var stageHeight = (Math.abs(stage.lowerRight.line - stage.upperLeft.line) + 1) * spriteSize;
@@ -233,109 +346,26 @@ var SeatMap;
 /// <reference path="./view.ts" />
 var SeatMap;
 (function (SeatMap) {
-    /** This class initializes and renders the SeatMap */
-    var Map = (function () {
-        function Map(el, data, options, onReady) {
-            var _this = this;
-            this._seats_map = {};
-            this._seats_arr = new Array();
-            /*
-             Canvas dimensions are calculated from the map columns and rows
-             and the maximum sprite size/resolution;
-             */
-            var columns = data.bounds.columns;
-            var rows = data.bounds.rows;
-            var width = columns * options.sprite_size;
-            var height = columns * options.sprite_size;
-            var seat_views = new Array();
-            var loader = PIXI.loader.add(["assets/texture.json"]);
-            loader.load(function () {
-                var SEAT_CONFIG = {
-                    interactive: true,
-                    icons: {
-                        "Obese": PIXI.Texture.fromFrame("Obese.png"),
-                        "Companion": PIXI.Texture.fromFrame("Companion.png"),
-                        "SuperD": PIXI.Texture.fromFrame("SuperD.png"),
-                        "Disability": PIXI.Texture.fromFrame("Disability.png"),
-                        "MotionSimulator": PIXI.Texture.fromFrame("MotionSimulator.png"),
-                        "ReducedMobility": PIXI.Texture.fromFrame("ReducedMobility.png"),
-                        "Couple": PIXI.Texture.fromFrame("Couple.png"),
-                        //"SuperSeat": PIXI.Texture.fromFrame("SuperSeat.png"),
-                        "Circle": PIXI.Texture.fromFrame("Circle.png"),
-                        "Square": PIXI.Texture.fromFrame("Square.png"),
-                        "Losangle": PIXI.Texture.fromFrame("Losangle.png"),
-                        "CoupleLeft": PIXI.Texture.fromFrame("CoupleLeft.png"),
-                        "CoupleRight": PIXI.Texture.fromFrame("CoupleRight.png")
-                    },
-                    palette: {
-                        "Available": 0x0cb0b1,
-                        "Occupied": 0xdbdbdb,
-                        "Selected": 0xd3793d
-                    },
-                    label_style: {
-                        font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
-                    }
-                };
-                var STAGE_CONFIG = {
-                    color: 0x666666,
-                    labelName: "TELA",
-                    labelStyle: {
-                        font: 'bold 30px "Trebuchet MS", Helvetica, sans-serif', fill: "white"
-                    }
-                };
-                //TODO: See if the seat from JSON can be directly mapped as a Model.Seat
-                data.lines.forEach(function (l) {
-                    l.seats.forEach(function (s) {
-                        var seat = new Model.Seat(s);
-                        _this._seats_map[seat.id] = seat;
-                        _this._seats_arr.push(seat);
-                        seat_views.push(new SeatMap.View.DefaultSeatView(seat, options.sprite_size, SEAT_CONFIG));
-                    });
+    var View;
+    (function (View) {
+        var D3ZoomBehavior = (function () {
+            function D3ZoomBehavior(el, zoomable, width, height) {
+                var _this = this;
+                this.zoomable = zoomable;
+                var zoom = d3.behavior.zoom()
+                    .translate([0, 0])
+                    .scale(1)
+                    .size([width, height])
+                    .scaleExtent([1, 8])
+                    .on("zoom", function () {
+                    var e = d3.event;
+                    _this.zoomable.scale(e.scale, e.translate[0], e.translate[1]);
                 });
-                var map = new SeatMap.View.MapView(seat_views, width, height);
-                var stage = new SeatMap.View.DefaultStageView(data.stage, options.sprite_size, STAGE_CONFIG);
-                map.container.addChild(stage.container);
-                _this._container = map.container;
-                _this._renderer = PIXI.autoDetectRenderer(width, height, { backgroundColor: 0xffffff }, options.disable_web_gl);
-                el.appendChild(_this._renderer.view);
-                onReady(_this);
-            });
-        }
-        /** updates the state of a given seat */
-        Map.prototype.setSeatState = function (seatId, state) {
-            this._seats_map[seatId].status = state;
-        };
-        /** returns the seat with the given Id */
-        Map.prototype.getSeat = function (seatId) {
-            return this._seats_map[seatId];
-        };
-        /** returns every seat with the given state */
-        Map.prototype.getByState = function (state) {
-            var result = this._seats_arr.filter(function (s) { return s.status === state; });
-            return result;
-        };
-        /** main animation loop */
-        Map.prototype.animate = function () {
-            this._renderer.render(this._container);
-        };
-        return Map;
-    }());
-    SeatMap.Map = Map;
-    var Model;
-    (function (Model) {
-        /** Seat */
-        var Seat = (function () {
-            function Seat(seat) {
-                this.id = seat.id;
-                this.status = seat.status;
-                this.label = seat.label;
-                this.line = seat.line;
-                this.column = seat.column;
-                this.seatType = seat["type"];
+                d3.select(el).call(zoom).call(zoom.event);
             }
-            return Seat;
+            return D3ZoomBehavior;
         }());
-        Model.Seat = Seat;
-    })(Model = SeatMap.Model || (SeatMap.Model = {}));
+        View.D3ZoomBehavior = D3ZoomBehavior;
+    })(View = SeatMap.View || (SeatMap.View = {}));
 })(SeatMap || (SeatMap = {}));
 //# sourceMappingURL=seat_map.js.map

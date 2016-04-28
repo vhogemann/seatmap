@@ -1,31 +1,23 @@
 /// <reference path="../typings/main.d.ts" />
+/// <reference path="./view.ts" />
 
 namespace SeatMap{
     export namespace View {
-        
-        export interface IZoomable{
-            width:number;
-            height:number;
-            scale( scale : number, x : number, y: number );    
-            move( x: number, y: number);
-        }
-        
         export class D3ZoomBehavior{
-            
             public zoomable : IZoomable;
-            
-            constructor( target:IZoomable ){
-                this.zoomable = target;
-                
+            constructor( el:HTMLElement, zoomable:IZoomable, width: number, height: number ){
+                this.zoomable = zoomable;
                 let zoom = d3.behavior.zoom()
                     .translate([0, 0])
                     .scale(1)
-                    .size([this.zoomable.width, this.zoomable.height])
+                    .size([width, height])
                     .scaleExtent([1, 8])
-                    .on("zoom", ()=>{ })
-                    .on("zoomend", ()=>{ });
+                    .on("zoom", ()=>{
+                        let e : any = d3.event;
+                        this.zoomable.scale( e.scale, e.translate[0], e.translate[1] )
+                    });
+                d3.select(el).call(zoom).call(zoom.event);
             }
-            
             
         }
        

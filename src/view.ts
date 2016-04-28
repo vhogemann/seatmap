@@ -3,6 +3,18 @@
 namespace SeatMap{
     export namespace View {
         
+         /** SeatView event listener */
+        export interface ISeatListener<T extends ASeatView>  {
+            onMouseOver(view:T);
+            onMouseOut(view:T);
+            onClick(view:T);
+        }
+        
+        /** View objects that will receive Zoom and Pan events */
+        export interface IZoomable{
+            scale( scale : number, x : number, y: number );    
+        }
+        
         /** SeatView configuration options */
         export interface ISeatViewConfig{
             interactive : boolean;
@@ -23,7 +35,6 @@ namespace SeatMap{
             "Obese"|"Companion"|"SuperD"|"Disability"|"MotionSimulator"
             |"ReducedMobility"|"Couple"|"SuperSeat"|"Circle"|"Square"
             |"Losangle"|"CoupleLeft"|"CoupleRight";
-        
         
         
         /** base SeatView implementation, boilerplate goes here */
@@ -113,13 +124,6 @@ namespace SeatMap{
             
         }
         
-        /** SeatView event listener */
-        export interface ISeatListener<T extends ASeatView>  {
-            onMouseOver(view:T);
-            onMouseOut(view:T);
-            onClick(view:T);
-        }
-        
         export class DefaultSeatListener implements ISeatListener<DefaultSeatView>
         {
             public onMouseOver(view:DefaultSeatView){
@@ -163,7 +167,7 @@ namespace SeatMap{
         }
         
         /** renders the seatmap background and receives zoom and pan events */
-        export class MapView {
+        export class DefaultMapView implements IZoomable {
             container:PIXI.Container;
             
             constructor(seats:View.ASeatView[], width:number, height: number){
@@ -174,15 +178,16 @@ namespace SeatMap{
             }
             
             /** sets the map scale, and centers aroud the point given by x and y */
-            public setScale( scale:number, x: number, y:number ){
+            public scale( scale:number, x: number, y:number ){
                 this.container.scale = new PIXI.Point(scale,scale);
+                this.container.position = new PIXI.Point( x, y );
             }
             
             /** positions the map relative to its origin */
             public moveTo(x: number, y: number){
                 this.container.position = new PIXI.Point(x,y);
             }
-            
+                        
         }
         
         /** Default SeatView implementation */
